@@ -246,6 +246,15 @@
                 "EDITOR",
                 "ADMIN"
               ]
+            },
+            "locationGroupPattern": {
+              "type": "string"
+            },
+            "locationVisibility": {
+              "enum": [
+                "all",
+                "granted"
+              ]
             }
           }
         },

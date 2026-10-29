@@ -138,6 +138,12 @@ authkit:
   rbac:
     unknownMutationRole: ADMIN
     restWriteRole: EDITOR
+    # Per-code-location roles from groups, e.g. "dagster:{location}:{role}"
+    # (Keycloak full group paths: "/dagster/{location}/{role}"). Empty = off.
+    locationGroupPattern: ""
+    # "all": everyone sees every code location. "granted": users without a
+    # global group only see locations they hold a role in (needs the pattern).
+    locationVisibility: all
 
   # --- LDAP (when backend=ldap) ---
   ldap:

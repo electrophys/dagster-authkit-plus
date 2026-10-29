@@ -75,6 +75,21 @@ def verify_dagster_api_compatibility() -> Tuple[bool, Optional[str]]:
             f"AuthKit {__version__} is compatible with Dagster {', '.join(COMPATIBLE_DAGSTER_VERSIONS)}"
         )
 
+    # 2b. Location-scoped RBAC hooks into Dagster's per-request permission
+    # context. If those internals move, refuse to start rather than silently
+    # running without location scoping.
+    from dagster_authkit.utils.config import config
+
+    if config.DAGSTER_AUTH_LOCATION_GROUP_PATTERN:
+        error = _check_location_rbac_api(webserver_class)
+        if not error and config.DAGSTER_AUTH_LOCATION_VISIBILITY == "granted":
+            error = _check_location_visibility_api()
+        if error:
+            return False, (
+                f"{error} DAGSTER_AUTH_LOCATION_GROUP_PATTERN is not supported on Dagster "
+                f"{getattr(dagster, '__version__', 'unknown')}; unset it or change Dagster version."
+            )
+
     # 3. Check Dagster version
     dagster_version = getattr(dagster, "__version__", "unknown")
     logger.info(f"Dagster version detected: {dagster_version}")
@@ -132,6 +147,50 @@ def verify_dagster_api_compatibility() -> Tuple[bool, Optional[str]]:
         return False, f"Starlette middleware API incompatible: {e}"
 
     return True, None
+
+
+def _check_location_rbac_api(webserver_class) -> Optional[str]:
+    """Return an error message if the Dagster internals used by location RBAC are missing."""
+    from dagster_authkit.core.location_rbac import PERMISSION_ROLES, request_context_method_name
+
+    if request_context_method_name(webserver_class) is None:
+        return "DagsterWebserver._make_request_context not found."
+
+    try:
+        from dagster._core.workspace.context import WorkspaceRequestContext
+        from dagster._core.workspace.permissions import Permissions
+    except ImportError as e:
+        return f"Dagster permission API not found: {e}."
+
+    for attr in ("permissions", "permissions_for_location", "has_permission_for_location"):
+        if not hasattr(WorkspaceRequestContext, attr):
+            return f"WorkspaceRequestContext.{attr} not found."
+
+    unmapped = sorted(p.value for p in Permissions if p.value not in PERMISSION_ROLES)
+    if unmapped:
+        # Not fatal: unmapped permissions require DAGSTER_AUTH_UNKNOWN_MUTATION_ROLE.
+        logger.warning(
+            f"Dagster permissions without an AuthKit role mapping (will require "
+            f"DAGSTER_AUTH_UNKNOWN_MUTATION_ROLE): {', '.join(unmapped)}"
+        )
+    return None
+
+
+def _check_location_visibility_api() -> Optional[str]:
+    """Return an error message if the Dagster internals used to hide locations are missing."""
+    from dagster_authkit.core.location_visibility import FILTERED_INSTANCE_METHODS
+
+    try:
+        from dagster import DagsterInstance
+        from dagster._core.workspace.workspace import CurrentWorkspace  # noqa: F401
+        from dagster._record import copy  # noqa: F401
+    except ImportError as e:
+        return f"Dagster workspace/instance API not found: {e}."
+
+    missing = [m for m in FILTERED_INSTANCE_METHODS if not hasattr(DagsterInstance, m)]
+    if missing:
+        return f"DagsterInstance methods not found: {', '.join(missing)}."
+    return None
 
 
 def get_compatibility_report() -> str:

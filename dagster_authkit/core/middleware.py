@@ -95,6 +95,11 @@ class DagsterAuthMiddleware:
         # GraphQL mutations use their own per-mutation RBAC via RolePermissions.
         self._rest_write_role = Role[getattr(config, "DAGSTER_AUTH_REST_WRITE_ROLE", "EDITOR")]
 
+        # With location-scoped RBAC, Dagster enforces per-location roles for
+        # LOCATION_SCOPED_MUTATIONS (see core/location_rbac.py), so the
+        # middleware only needs the user to hold the role in *some* location.
+        self._location_rbac = bool(config.DAGSTER_AUTH_LOCATION_GROUP_PATTERN)
+
     # ================================================================
     # ASGI entry point
     # ================================================================
@@ -144,7 +149,7 @@ class DagsterAuthMiddleware:
             return
 
         logger.debug(f"WebSocket authenticated: {user.username} on {path}")
-        await self.app(scope, receive, send)
+        await self.app(self._scope_with_user(scope, user), receive, send)
 
     # ================================================================
     # HTTP handling
@@ -263,7 +268,9 @@ class DagsterAuthMiddleware:
                         default_role=self._unknown_mutation_role,
                     )
 
-                    if required_role and not user.can(required_role):
+                    if required_role and not self._can_run_mutation(
+                        user, mutation_name, required_role
+                    ):
                         self._log_denied(user, mutation_name, required_role)
                         track_rbac_decision(False, user.role.name)
                         response = self._generate_dagster_error_response(
@@ -295,10 +302,22 @@ class DagsterAuthMiddleware:
             await response(scope, receive, send)
             return
 
-        # Store user in scope for downstream handlers (e.g., UI injection).
-        # Use a Starlette State object (not a plain dict) so that attribute
-        # access via request.state.user works correctly in Starlette 1.3.1+,
-        # where request.state returns scope["state"] directly.
+        await self._passthrough(self._scope_with_user(scope, user), downstream_receive, send)
+
+    def _can_run_mutation(self, user: AuthUser, mutation_name: str, required_role: Role) -> bool:
+        """Global role check, or highest-location-role check for location-scoped mutations."""
+        if self._location_rbac and mutation_name in RolePermissions.LOCATION_SCOPED_MUTATIONS:
+            return user.highest_role >= required_role
+        return user.can(required_role)
+
+    @staticmethod
+    def _scope_with_user(scope: Scope, user: AuthUser) -> Scope:
+        """
+        Copy of scope with the user stored for downstream handlers (UI injection,
+        location-scoped permissions). Uses a Starlette State object (not a plain
+        dict) so that request.state.user works in Starlette 1.3.1+, where
+        request.state returns scope["state"] directly.
+        """
         scope = dict(scope)
         existing_state = scope.get("state")
         if not isinstance(existing_state, State):
@@ -308,8 +327,7 @@ class DagsterAuthMiddleware:
                     setattr(new_state, k, v)
             scope["state"] = new_state
         scope["state"].user = user
-
-        await self._passthrough(scope, downstream_receive, send)
+        return scope
 
     async def _passthrough(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Pass the request to the inner app. send is already wrapped with security headers."""

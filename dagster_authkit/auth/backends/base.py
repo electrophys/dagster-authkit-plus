@@ -6,7 +6,7 @@ Includes Role hierarchy, AuthUser dataclass, and audit helpers.
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import Any, Dict, List, Optional, Set
 
@@ -114,6 +114,53 @@ class RolePermissions:
         {
             "reloadRepositoryLocation",
             "reloadWorkspace",
+            "shutdownRepositoryLocation",
+        }
+    )
+
+    # Mutations whose Dagster resolvers check permissions per code location
+    # (via has_permission_for_location / _for_run / _for_selector / _for_backfill).
+    # With location-scoped RBAC enabled, the middleware lets these through on
+    # the user's highest location role and Dagster enforces the location.
+    # Every other mutation is gated on the user's global role only.
+    # Verified against Dagster 1.13.27 — re-check when adding entries.
+    LOCATION_SCOPED_MUTATIONS: Set[str] = frozenset(
+        {
+            # Runs
+            "launchRun",
+            "launchPipelineExecution",
+            "launchMultipleRuns",
+            "launchRunReexecution",
+            "launchPipelineReexecution",
+            "terminateRun",
+            "terminatePipelineExecution",
+            "terminateRuns",
+            "deleteRun",
+            "deletePipelineRun",
+            # Schedules
+            "startSchedule",
+            "stopRunningSchedule",
+            "resetSchedule",
+            "scheduleDryRun",
+            # Sensors
+            "startSensor",
+            "stopSensor",
+            "resetSensor",
+            "setSensorCursor",
+            "sensorDryRun",
+            # Assets
+            "wipeAssets",
+            "reportRunlessAssetEvents",
+            # Backfills
+            "launchPartitionBackfill",
+            "cancelPartitionBackfill",
+            "resumePartitionBackfill",
+            "reexecutePartitionBackfill",
+            # Partitions
+            "addDynamicPartition",
+            "deleteDynamicPartitions",
+            # Code locations
+            "reloadRepositoryLocation",
             "shutdownRepositoryLocation",
         }
     )
@@ -234,15 +281,23 @@ class AuthUser:
 
     Attributes:
         username: Unique username
-        role: Role level (VIEWER/LAUNCHER/EDITOR/ADMIN)
+        role: Role level (VIEWER/LAUNCHER/EDITOR/ADMIN), applies everywhere
         email: Email address (optional)
         full_name: Display name (optional)
+        location_roles: Extra per-code-location roles, keyed by lowercased
+                        location name (optional, see location-scoped RBAC)
+        global_access: Whether ``role`` was explicitly granted (e.g. via a
+                       plain ``viewers`` group) rather than defaulted. With
+                       ``DAGSTER_AUTH_LOCATION_VISIBILITY=granted``, users
+                       without it only see their granted locations.
     """
 
     username: str
     role: Role
     email: str = ""
     full_name: str = ""
+    location_roles: Dict[str, Role] = field(default_factory=dict)
+    global_access: bool = True
 
     def can(self, required_role: Role) -> bool:
         """
@@ -261,6 +316,32 @@ class AuthUser:
         """
         return self.role >= required_role
 
+    def role_for_location(self, location_name: str) -> Role:
+        """
+        Effective role in a code location: the higher of the global role and
+        any role granted for that location.
+
+        Args:
+            location_name: Dagster code location name (case-insensitive).
+        """
+        scoped = self.location_roles.get(location_name.lower())
+        return max(self.role, scoped) if scoped is not None else self.role
+
+    @property
+    def highest_role(self) -> Role:
+        """Highest role the user holds anywhere (global or any location)."""
+        return max([self.role, *self.location_roles.values()])
+
+    def can_see_location(self, location_name: str) -> bool:
+        """
+        Whether the location is visible to the user when visibility is
+        restricted to granted locations (``DAGSTER_AUTH_LOCATION_VISIBILITY=granted``).
+
+        Args:
+            location_name: Dagster code location name (case-insensitive).
+        """
+        return self.global_access or location_name.lower() in self.location_roles
+
     @property
     def display_name(self) -> str:
         """Friendly name for UI (fallback to username)."""
@@ -275,14 +356,22 @@ class AuthUser:
         and string formats for backward compatibility with existing sessions.
 
         Returns:
-            Dict with username, role, email, full_name
+            Dict with username, role, email, full_name, plus location_roles
+            and global_access only when non-default (to keep cookies small)
         """
-        return {
+        data = {
             "username": self.username,
             "role": self.role.value,
             "email": self.email,
             "full_name": self.full_name,
         }
+        if self.location_roles:
+            data["location_roles"] = {
+                location: role.value for location, role in self.location_roles.items()
+            }
+        if not self.global_access:
+            data["global_access"] = False
+        return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "AuthUser":
@@ -290,19 +379,24 @@ class AuthUser:
         Create AuthUser from dict.
         Robust enough to handle both String names and Integer values.
         """
-        raw_role = data["role"]
-
-        if isinstance(raw_role, str):
-            resolved_role = Role[raw_role]
-        else:
-            resolved_role = Role(raw_role)
-
         return cls(
             username=data["username"],
-            role=resolved_role,
+            role=_resolve_role(data["role"]),
             email=data.get("email", ""),
             full_name=data.get("full_name", ""),
+            location_roles={
+                location: _resolve_role(raw_role)
+                for location, raw_role in (data.get("location_roles") or {}).items()
+            },
+            global_access=data.get("global_access", True),
         )
+
+
+def _resolve_role(raw_role: Any) -> Role:
+    """Resolve a role stored either by name (``"ADMIN"``) or value (``40``)."""
+    if isinstance(raw_role, str):
+        return Role[raw_role]
+    return Role(raw_role)
 
 
 # ========================================

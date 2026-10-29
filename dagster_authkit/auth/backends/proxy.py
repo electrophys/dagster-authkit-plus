@@ -24,12 +24,21 @@ If DAGSTER_AUTH_PROXY_GROUP_PATTERN is not set, falls back to simple matching:
   - "admins" → Role.ADMIN
   - "editors" → Role.EDITOR
   - etc.
+
+Location-scoped roles (optional):
+Configure via DAGSTER_AUTH_LOCATION_GROUP_PATTERN, e.g. dagster:{location}:{role}.
+  - dagster:team_a:launchers → LAUNCHER in code location team_a
+These add to the global role above; see auth/location_roles.py.
 """
 
 import logging
 from typing import Any, Dict, List, Optional
 
 from dagster_authkit.auth.backends.base import AuthBackend, AuthUser, Role
+from dagster_authkit.auth.location_roles import (
+    compile_location_group_pattern,
+    parse_location_roles,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +89,14 @@ class ProxyAuthBackend(AuthBackend):
                 Role.VIEWER: "viewers",
             }
             logger.info("✅ Using simple group matching (admins, editors, launchers, viewers)")
+
+        # Group → per-location role mapping (optional)
+        location_pattern = config.get("DAGSTER_AUTH_LOCATION_GROUP_PATTERN")
+        self.location_pattern = (
+            compile_location_group_pattern(location_pattern) if location_pattern else None
+        )
+        if location_pattern:
+            logger.info(f"✅ Using location group pattern: {location_pattern}")
 
         logger.info(
             f"ProxyAuthBackend initialized\n"
@@ -260,8 +277,14 @@ class ProxyAuthBackend(AuthBackend):
         groups_raw = headers_lower.get(self.groups_header.lower(), "")
         groups = self._parse_groups_header(groups_raw)
 
-        # Determine role from groups
-        role = self._determine_role_from_groups(groups)
+        # Determine per-location roles, then the global role from groups.
+        # Users with only location groups legitimately get a VIEWER global
+        # role, so don't warn about the default in that case.
+        location_roles = (
+            parse_location_roles(groups, self.location_pattern) if self.location_pattern else {}
+        )
+        matched_role = self._match_global_role(groups)
+        role = self._determine_role_from_groups(groups, warn_on_default=not location_roles)
 
         # Extract optional metadata
         email = headers_lower.get(self.email_header.lower(), "")
@@ -271,6 +294,7 @@ class ProxyAuthBackend(AuthBackend):
             f"✅ Proxy auth: User '{username}' authenticated\n"
             f"   Groups: {groups}\n"
             f"   Role: {role.name}\n"
+            f"   Location roles: {({loc: r.name for loc, r in location_roles.items()}) or 'N/A'}\n"
             f"   Email: {email or 'N/A'}\n"
             f"   Full name: {full_name}"
         )
@@ -280,9 +304,20 @@ class ProxyAuthBackend(AuthBackend):
             role=role,
             email=email,
             full_name=full_name,
+            location_roles=location_roles,
+            # A defaulted VIEWER role doesn't grant visibility of every location
+            global_access=matched_role is not None,
         )
 
-    def _determine_role_from_groups(self, groups: List[str]) -> Role:
+    def _match_global_role(self, groups: List[str]) -> Optional[Role]:
+        """Highest role whose global group the user is in, or None if no group matches."""
+        for role in [Role.ADMIN, Role.EDITOR, Role.LAUNCHER, Role.VIEWER]:
+            target_group = self.group_mappings.get(role, "").lower()
+            if target_group and target_group in groups:
+                return role
+        return None
+
+    def _determine_role_from_groups(self, groups: List[str], warn_on_default: bool = True) -> Role:
         """
         Maps LDAP groups to AuthKit roles.
 
@@ -298,12 +333,13 @@ class ProxyAuthBackend(AuthBackend):
             groups = ["cn=admins,ou=groups,dc=company,dc=com", "cn=developers,ou=groups"]
             # Returns: Role.ADMIN (highest priority match)
         """
-        # Check in priority order
-        for role in [Role.ADMIN, Role.EDITOR, Role.LAUNCHER, Role.VIEWER]:
-            target_group = self.group_mappings.get(role, "").lower()
-            if target_group and target_group in groups:
-                logger.debug(f"   Matched '{target_group}' → {role.name}")
-                return role
+        role = self._match_global_role(groups)
+        if role is not None:
+            logger.debug(f"   Matched '{self.group_mappings[role]}' → {role.name}")
+            return role
+
+        if not warn_on_default:
+            return Role.VIEWER
 
         logger.warning(
             f"⚠️  No group match found for: {groups}\n"

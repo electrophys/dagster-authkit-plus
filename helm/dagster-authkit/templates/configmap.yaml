@@ -16,6 +16,7 @@ data:
   DAGSTER_AUTH_RATE_LIMIT_WINDOW: {{ .Values.authkit.rateLimit.windowSeconds | quote }}
   DAGSTER_AUTH_UNKNOWN_MUTATION_ROLE: {{ .Values.authkit.rbac.unknownMutationRole | quote }}
   DAGSTER_AUTH_REST_WRITE_ROLE: {{ .Values.authkit.rbac.restWriteRole | quote }}
+  DAGSTER_AUTH_LOCATION_VISIBILITY: {{ .Values.authkit.rbac.locationVisibility | quote }}
   DAGSTER_AUTH_PROXY_USER_HEADER: {{ .Values.authkit.proxy.userHeader | quote }}
   DAGSTER_AUTH_PROXY_GROUPS_HEADER: {{ .Values.authkit.proxy.groupsHeader | quote }}
   DAGSTER_AUTH_PROXY_EMAIL_HEADER: {{ .Values.authkit.proxy.emailHeader | quote }}
@@ -47,6 +48,9 @@ data:
   {{- end }}
   {{- if .Values.authkit.proxy.trustedIPs }}
   DAGSTER_AUTH_PROXY_TRUSTED_IPS: {{ .Values.authkit.proxy.trustedIPs | quote }}
+  {{- end }}
+  {{- if .Values.authkit.rbac.locationGroupPattern }}
+  DAGSTER_AUTH_LOCATION_GROUP_PATTERN: {{ .Values.authkit.rbac.locationGroupPattern | quote }}
   {{- end }}
   {{- if .Values.authkit.proxy.groupPattern }}
   DAGSTER_AUTH_PROXY_GROUP_PATTERN: {{ .Values.authkit.proxy.groupPattern | quote }}

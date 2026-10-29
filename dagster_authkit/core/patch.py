@@ -22,7 +22,12 @@ from starlette.routing import Mount, Route
 
 from dagster_authkit.api.health import health_endpoint, metrics_endpoint
 from dagster_authkit.api.routes import create_auth_routes
-from dagster_authkit.auth.backends.base import AuthUser
+from dagster_authkit.auth.backends.base import Role
+from dagster_authkit.core.location_rbac import (
+    get_connection_user,
+    request_context_method_name,
+    scope_request_context,
+)
 from dagster_authkit.utils.config import config
 from dagster_authkit.utils.templates import render_user_menu_injection
 
@@ -102,6 +107,26 @@ def apply_patches() -> None:
         logger.exception(f"UI patch failed: {e}")
         raise
 
+    # PATCH 4: Location-scoped permissions (opt-in)
+    if config.DAGSTER_AUTH_LOCATION_GROUP_PATTERN:
+        try:
+            method_name = request_context_method_name(webserver_module.DagsterWebserver)
+            original_make_request_context = getattr(webserver_module.DagsterWebserver, method_name)
+            default_role = Role[config.DAGSTER_AUTH_UNKNOWN_MUTATION_ROLE]
+            restrict_visibility = config.DAGSTER_AUTH_LOCATION_VISIBILITY == "granted"
+
+            def patched_make_request_context(self, conn):
+                context = original_make_request_context(self, conn)
+                return scope_request_context(
+                    context, get_connection_user(conn), default_role, restrict_visibility
+                )
+
+            setattr(webserver_module.DagsterWebserver, method_name, patched_make_request_context)
+            logger.info(f"Location-scoped permissions patched ({method_name})")
+        except Exception as e:
+            logger.exception(f"Location permissions patch failed: {e}")
+            raise
+
     # Mark as patched to prevent re-application
     webserver_module.DagsterWebserver._authkit_patched = True
 
@@ -122,19 +147,10 @@ async def _inject_resilient_ui(self, request: Request) -> HTMLResponse:
         logger.error(f"Failed to get index HTML: {e}", exc_info=True)
         raise
 
-    # Bug 2: The middleware stores the user via dict-key assignment on scope["state"].
-    # In Starlette 1.3.1+, request.state returns scope["state"] directly, so when
-    # it is a plain dict, getattr(..., "user", None) finds no attribute and returns
-    # None — silently skipping injection. Check both access patterns defensively.
-    _raw_state = request.scope.get("state")
-    user = (
-        _raw_state.get("user") if isinstance(_raw_state, dict)
-        else getattr(request.state, "user", None)
-    )
-
-    if not user or not isinstance(user, AuthUser):
-        if user is not None and not isinstance(user, AuthUser):
-            logger.debug(f"request.state.user is not an AuthUser: {type(user)}")
+    # Bug 2: In Starlette 1.3.1+, request.state returns scope["state"] directly,
+    # which may be a plain dict — get_connection_user checks both access patterns.
+    user = get_connection_user(request)
+    if user is None:
         return response
 
     try:

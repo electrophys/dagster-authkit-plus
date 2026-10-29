@@ -184,6 +184,51 @@ We provide **4 levels** of access. Permissions are enforced via GraphQL query an
 
 **How it works:** AuthKit analyzes GraphQL queries using the official GraphQL parser to accurately identify mutations and block unauthorized actions.
 
+### Roles per code location (proxy mode)
+
+Grant roles in specific code locations through group names. The location and role are read from each group using a pattern:
+
+```bash
+export DAGSTER_AUTH_LOCATION_GROUP_PATTERN='dagster:{location}:{role}'
+# Keycloak with "Full group path" enabled:
+# export DAGSTER_AUTH_LOCATION_GROUP_PATTERN='/dagster/{location}/{role}'
+```
+
+| User's groups | Result |
+|---------------|--------|
+| `dagster:team_a:launchers` | LAUNCHER in `team_a`, VIEWER everywhere else |
+| `dagster:team_a:editors`, `dagster:team_b:launchers` | EDITOR in `team_a`, LAUNCHER in `team_b` |
+| `launchers`, `dagster:team_a:editors` | LAUNCHER everywhere, EDITOR in `team_a` |
+
+- `{role}` accepts `admin(s)`, `editor(s)`, `launcher(s)` or `viewer(s)`. Matching is case-insensitive, including location names.
+- A location role can only *add* to the global role (the plain `admins`/`editors`/… groups), never lower it.
+- AuthKit hooks into Dagster's own per-location permission checks, so they cover launches, re-execution, terminate/delete by run ID, schedules, sensors, backfills, dynamic partitions, asset wipes and code location reloads. The Dagster UI disables buttons for locations the user can't act on.
+- Workspace-wide actions (reload workspace, concurrency limits, auto-materialize toggle) use the global role only.
+- Only the proxy backend reads location groups today. AuthKit refuses to start if the installed Dagster version lacks the permission API it hooks into (tested on Dagster 1.10–1.13).
+
+#### Hiding other teams' code locations
+
+By default every signed-in user can *see* all code locations. To hide the ones a user has no role in:
+
+```bash
+export DAGSTER_AUTH_LOCATION_VISIBILITY=granted
+```
+
+A user in any plain global group (`admins`, `editors`, `launchers`, `viewers`) still sees everything. Anyone else sees only the locations they have a group for, so use `dagster:<location>:viewers` to give read-only access to a single location. A user with no matching groups sees an empty workspace.
+
+What gets hidden:
+
+| Area | Behaviour |
+|------|-----------|
+| Code locations, jobs, schedules, sensors, asset definitions, lineage | Not listed (removed from the user's workspace) |
+| Runs list, runs feed, run counts | Only runs from visible locations (filtered in the database query) |
+| Run page, run event logs, captured stdout/stderr | "Run not found" / empty for runs in hidden locations |
+| Backfills | Only job backfills in visible locations, and asset backfills whose assets are all visible |
+| Asset catalog, materialization/observation history | Only assets defined in visible locations |
+| Run tag typeahead | Location tag values from hidden locations removed |
+
+This **hides** data; it is not a security boundary. Dagster's GraphQL API wasn't designed for per-user reads, so some details can still surface, for example other tag values in the run filter typeahead, or asset keys from hidden locations that appear as upstream dependencies of visible assets. Runs that can't be tied to a location (no code location origin or repository tag) are hidden from scoped users. For a hard boundary, run a separate webserver per team with its own `workspace.yaml`.
+
 ---
 
 ## 📦 Backends

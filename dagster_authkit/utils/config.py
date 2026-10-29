@@ -63,6 +63,11 @@ class AuthConfig:
         **RBAC:**
             ``DAGSTER_AUTH_UNKNOWN_MUTATION_ROLE`` Default: ``ADMIN`` — deny-by-default
             ``DAGSTER_AUTH_REST_WRITE_ROLE``       Default: ``EDITOR``
+            ``DAGSTER_AUTH_LOCATION_GROUP_PATTERN`` Optional. Enables per-code-location
+                                                   roles from groups, e.g.
+                                                   ``dagster:{location}:{role}``
+            ``DAGSTER_AUTH_LOCATION_VISIBILITY``   Default: ``all``. ``granted`` hides
+                                                   locations a user holds no role in
 
         **Service token (non-interactive API clients, session backends only):**
             ``DAGSTER_AUTH_SERVICE_TOKEN``         Optional shared secret (min 32 chars).
@@ -205,6 +210,17 @@ class AuthConfig:
             )
         self.DAGSTER_AUTH_REST_WRITE_ROLE = raw_rest_role
 
+        # RBAC: per-code-location roles parsed from group names. Disabled when
+        # unset. Dagster enforces them through its own location permission checks.
+        self.DAGSTER_AUTH_LOCATION_GROUP_PATTERN = (
+            os.getenv("DAGSTER_AUTH_LOCATION_GROUP_PATTERN") or None
+        )
+        # Which code locations users without a global group can see:
+        # "all" (default) or "granted" (only locations they hold a role in).
+        self.DAGSTER_AUTH_LOCATION_VISIBILITY = (
+            os.getenv("DAGSTER_AUTH_LOCATION_VISIBILITY") or "all"
+        ).lower()
+
         # Service token: static shared secret for non-interactive API clients
         # (e.g. Prometheus exporters) that cannot go through the login form.
         # Disabled when unset. The header default matches Dagster+ so clients
@@ -284,6 +300,32 @@ class AuthConfig:
                     "Service token grants %s role. It is a static, non-expiring credential; "
                     "prefer VIEWER unless the client needs to run mutations.",
                     self.DAGSTER_AUTH_SERVICE_TOKEN_ROLE,
+                )
+
+        if self.DAGSTER_AUTH_LOCATION_VISIBILITY not in ("all", "granted"):
+            raise ValueError(
+                f"Invalid DAGSTER_AUTH_LOCATION_VISIBILITY: {self.DAGSTER_AUTH_LOCATION_VISIBILITY}. "
+                "Must be one of: all, granted"
+            )
+        if (
+            self.DAGSTER_AUTH_LOCATION_VISIBILITY == "granted"
+            and not self.DAGSTER_AUTH_LOCATION_GROUP_PATTERN
+        ):
+            raise ValueError(
+                "DAGSTER_AUTH_LOCATION_VISIBILITY=granted requires "
+                "DAGSTER_AUTH_LOCATION_GROUP_PATTERN to be set."
+            )
+
+        if self.DAGSTER_AUTH_LOCATION_GROUP_PATTERN:
+            from dagster_authkit.auth.location_roles import compile_location_group_pattern
+
+            compile_location_group_pattern(self.DAGSTER_AUTH_LOCATION_GROUP_PATTERN)
+            if self.AUTH_BACKEND != "proxy":
+                logger.warning(
+                    "DAGSTER_AUTH_LOCATION_GROUP_PATTERN is set, but only the proxy backend "
+                    "reads location roles from groups. Users of the %s backend keep their "
+                    "global role in every code location.",
+                    self.AUTH_BACKEND,
                 )
 
         if self.REDIS_URL:
