@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from dagster_authkit.auth.backends.base import Role
-from dagster_authkit.auth.backends.sql import PeeweeAuthBackend, UserTable
-from dagster_authkit.cli import cli_tools
+from dagster_authkit_plus.auth.backends.base import Role
+from dagster_authkit_plus.auth.backends.sql import PeeweeAuthBackend, UserTable
+from dagster_authkit_plus.cli import cli_tools
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ class TestGetBackend:
 
 class TestHandleUserManagement:
     def test_no_args_prints_help(self, capsys):
-        with patch.object(sys, "argv", ["dagster-authkit"]):
+        with patch.object(sys, "argv", ["dagster-authkit-plus"]):
             rc = cli_tools.handle_user_management()
         assert rc == 1
         captured = capsys.readouterr()
@@ -64,7 +64,7 @@ class TestHandleUserManagement:
 
     def test_init_db(self, dsn, capsys):
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "init-db", "--db-path", dsn]),
+            patch.object(sys, "argv", ["dagster-authkit-plus", "init-db", "--db-path", dsn]),
             patch("builtins.input", return_value="n"),
         ):
             rc = cli_tools.handle_user_management()
@@ -74,7 +74,7 @@ class TestHandleUserManagement:
 
     def test_init_db_with_admin(self, dsn, capsys):
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "init-db", "--db-path", dsn, "--with-admin"]),
+            patch.object(sys, "argv", ["dagster-authkit-plus", "init-db", "--db-path", dsn, "--with-admin"]),
             patch("getpass.getpass", return_value="adminpass"),
             patch("builtins.input", return_value="admin"),
         ):
@@ -85,7 +85,7 @@ class TestHandleUserManagement:
 
     def test_add_user(self, dsn, capsys):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "add-user", "charlie", "--password", "secret", "--editor", "--db-path", dsn]
+            sys, "argv", ["dagster-authkit-plus", "add-user", "charlie", "--password", "secret", "--editor", "--db-path", dsn]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 0
@@ -94,7 +94,7 @@ class TestHandleUserManagement:
 
     def test_add_user_invalid_role(self, dsn, capsys):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "add-user", "eve", "--password", "x", "--role", "SUPERUSER", "--db-path", dsn]
+            sys, "argv", ["dagster-authkit-plus", "add-user", "eve", "--password", "x", "--role", "SUPERUSER", "--db-path", dsn]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 1
@@ -102,7 +102,7 @@ class TestHandleUserManagement:
         assert "Invalid role" in captured.out
 
     def test_list_users(self, capsys, populated):
-        with patch.object(sys, "argv", ["dagster-authkit", "list-users", "--db-path", populated]):
+        with patch.object(sys, "argv", ["dagster-authkit-plus", "list-users", "--db-path", populated]):
             rc = cli_tools.handle_user_management()
         assert rc == 0
         captured = capsys.readouterr()
@@ -110,7 +110,7 @@ class TestHandleUserManagement:
         assert "bob" in captured.out
 
     def test_list_users_empty(self, dsn, capsys):
-        with patch.object(sys, "argv", ["dagster-authkit", "list-users", "--db-path", dsn]):
+        with patch.object(sys, "argv", ["dagster-authkit-plus", "list-users", "--db-path", dsn]):
             rc = cli_tools.handle_user_management()
         assert rc == 0
         captured = capsys.readouterr()
@@ -118,7 +118,7 @@ class TestHandleUserManagement:
 
     def test_change_password(self, capsys, populated):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "change-password", "alice", "--password", "newpass", "--db-path", populated]
+            sys, "argv", ["dagster-authkit-plus", "change-password", "alice", "--password", "newpass", "--db-path", populated]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 0
@@ -127,7 +127,7 @@ class TestHandleUserManagement:
 
     def test_change_password_user_not_found(self, dsn, capsys):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "change-password", "nobody", "--password", "x", "--db-path", dsn]
+            sys, "argv", ["dagster-authkit-plus", "change-password", "nobody", "--password", "x", "--db-path", dsn]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 1
@@ -136,7 +136,7 @@ class TestHandleUserManagement:
 
     def test_delete_user(self, capsys, populated):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "delete-user", "alice", "--yes", "--db-path", populated]
+            sys, "argv", ["dagster-authkit-plus", "delete-user", "alice", "--yes", "--db-path", populated]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 0
@@ -145,7 +145,7 @@ class TestHandleUserManagement:
 
     def test_delete_user_not_found(self, dsn, capsys):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "delete-user", "nobody", "--yes", "--db-path", dsn]
+            sys, "argv", ["dagster-authkit-plus", "delete-user", "nobody", "--yes", "--db-path", dsn]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 1
@@ -154,7 +154,7 @@ class TestHandleUserManagement:
 
     def test_change_role(self, capsys, populated):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "change-role", "alice", "VIEWER", "--db-path", populated]
+            sys, "argv", ["dagster-authkit-plus", "change-role", "alice", "VIEWER", "--db-path", populated]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 0
@@ -163,7 +163,7 @@ class TestHandleUserManagement:
 
     def test_change_role_invalid(self, dsn, capsys):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "change-role", "alice", "GOD", "--db-path", dsn]
+            sys, "argv", ["dagster-authkit-plus", "change-role", "alice", "GOD", "--db-path", dsn]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 1
@@ -172,7 +172,7 @@ class TestHandleUserManagement:
 
     def test_change_role_user_not_found(self, dsn, capsys):
         with patch.object(
-            sys, "argv", ["dagster-authkit", "change-role", "nobody", "ADMIN", "--db-path", dsn]
+            sys, "argv", ["dagster-authkit-plus", "change-role", "nobody", "ADMIN", "--db-path", dsn]
         ):
             rc = cli_tools.handle_user_management()
         assert rc == 1
@@ -180,7 +180,7 @@ class TestHandleUserManagement:
         assert "not found" in captured.out
 
     def test_list_permissions(self, capsys):
-        with patch.object(sys, "argv", ["dagster-authkit", "list-permissions"]):
+        with patch.object(sys, "argv", ["dagster-authkit-plus", "list-permissions"]):
             rc = cli_tools.handle_user_management()
         assert rc == 0
         captured = capsys.readouterr()
@@ -242,25 +242,25 @@ class TestDeleteUserCommand:
 # ── main() ────────────────────────────────────────────────────────────────
 
 
-@patch("dagster_authkit.cli.main.setup_logging", return_value=MagicMock())
-@patch("dagster_authkit.cli.main.print_banner")
-@patch("dagster_authkit.cli.main.print_config_summary")
-@patch("dagster_authkit.cli.main.verify_dagster_api_compatibility", return_value=(True, None))
-@patch("dagster_authkit.cli.main.apply_patches")
-@patch("dagster_authkit.cli.main.verify_patches", return_value=True)
+@patch("dagster_authkit_plus.cli.main.setup_logging", return_value=MagicMock())
+@patch("dagster_authkit_plus.cli.main.print_banner")
+@patch("dagster_authkit_plus.cli.main.print_config_summary")
+@patch("dagster_authkit_plus.cli.main.verify_dagster_api_compatibility", return_value=(True, None))
+@patch("dagster_authkit_plus.cli.main.apply_patches")
+@patch("dagster_authkit_plus.cli.main.verify_patches", return_value=True)
 class TestMain:
     def test_sql_bootstrap_called(
         self, mock_verify, mock_apply, mock_compat, mock_print_summary, mock_print_banner, mock_logging
     ):
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
-            patch("dagster_authkit.auth.backends.sql.PeeweeAuthBackend") as mock_backend,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
+            patch("dagster_authkit_plus.auth.backends.sql.PeeweeAuthBackend") as mock_backend,
         ):
             mock_config.AUTH_BACKEND = "sql"
             mock_config.__dict__ = {"AUTH_BACKEND": "sql"}
             try:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
             except SystemExit:
                 pass
@@ -270,11 +270,11 @@ class TestMain:
         self, mock_verify, mock_apply, mock_compat, mock_print_summary, mock_print_banner, mock_logging
     ):
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "list-users", "--db-path", "sqlite:///:memory:"]),
-            patch("dagster_authkit.cli.cli_tools.handle_user_management", return_value=0) as mock_hm,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "list-users", "--db-path", "sqlite:///:memory:"]),
+            patch("dagster_authkit_plus.cli.cli_tools.handle_user_management", return_value=0) as mock_hm,
         ):
             try:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
             except SystemExit:
                 pass
@@ -285,11 +285,11 @@ class TestMain:
         self, mock_verify, mock_apply, mock_compat, mock_print_summary, mock_print_banner, mock_logging
     ):
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "init-db"]),
-            patch("dagster_authkit.cli.cli_tools.handle_user_management", side_effect=RuntimeError("boom")),
+            patch.object(sys, "argv", ["dagster-authkit-plus", "init-db"]),
+            patch("dagster_authkit_plus.cli.cli_tools.handle_user_management", side_effect=RuntimeError("boom")),
         ):
             with pytest.raises(SystemExit) as exc:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
         assert exc.value.code == 1
 
@@ -298,13 +298,13 @@ class TestMain:
     ):
         mock_compat.return_value = (False, "Dagster too old")
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
         ):
             mock_config.AUTH_BACKEND = "dummy"
             mock_config.__dict__ = {"AUTH_BACKEND": "dummy"}
             with pytest.raises(SystemExit) as exc:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
         assert exc.value.code == 1
         mock_compat.assert_called_once()
@@ -314,13 +314,13 @@ class TestMain:
     ):
         mock_verify.return_value = False
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
         ):
             mock_config.AUTH_BACKEND = "dummy"
             mock_config.__dict__ = {"AUTH_BACKEND": "dummy"}
             with pytest.raises(SystemExit) as exc:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
         assert exc.value.code == 1
 
@@ -329,13 +329,13 @@ class TestMain:
     ):
         mock_apply.side_effect = RuntimeError("Patch failed")
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
         ):
             mock_config.AUTH_BACKEND = "dummy"
             mock_config.__dict__ = {"AUTH_BACKEND": "dummy"}
             with pytest.raises(SystemExit) as exc:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
         assert exc.value.code == 1
 
@@ -345,14 +345,14 @@ class TestMain:
         mock_dagster_main = MagicMock()
         import dagster_webserver.cli
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
             patch.object(dagster_webserver.cli, "main", mock_dagster_main),
         ):
             mock_config.AUTH_BACKEND = "dummy"
             mock_config.__dict__ = {"AUTH_BACKEND": "dummy"}
             try:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
             except SystemExit:
                 pass
@@ -374,8 +374,8 @@ class TestMain:
         dagit_cli_mod.main = mock_dagit_main
 
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
             patch.object(builtins, "__import__", mock_import),
             patch.dict("sys.modules", {
                 "dagster_webserver.cli": None,
@@ -386,7 +386,7 @@ class TestMain:
             mock_config.AUTH_BACKEND = "dummy"
             mock_config.__dict__ = {"AUTH_BACKEND": "dummy"}
             try:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
             except SystemExit:
                 pass
@@ -405,14 +405,14 @@ class TestMain:
             return original_import(name, *args, **kwargs)
 
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
             patch.object(builtins, "__import__", mock_import),
         ):
             mock_config.AUTH_BACKEND = "dummy"
             mock_config.__dict__ = {"AUTH_BACKEND": "dummy"}
             with pytest.raises(SystemExit) as exc:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
         assert exc.value.code == 1
 
@@ -422,14 +422,14 @@ class TestMain:
         mock_dagster_main = MagicMock(side_effect=SystemExit(2))
         import dagster_webserver.cli
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
             patch.object(dagster_webserver.cli, "main", mock_dagster_main),
         ):
             mock_config.AUTH_BACKEND = "dummy"
             mock_config.__dict__ = {"AUTH_BACKEND": "dummy"}
             with pytest.raises(SystemExit) as exc:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
         assert exc.value.code == 2
         captured = capsys.readouterr()
@@ -441,13 +441,13 @@ class TestMain:
         mock_dagster_main = MagicMock(side_effect=RuntimeError("Unexpected crash"))
         import dagster_webserver.cli
         with (
-            patch.object(sys, "argv", ["dagster-authkit", "-w", "workspace.yaml"]),
-            patch("dagster_authkit.cli.main.config") as mock_config,
+            patch.object(sys, "argv", ["dagster-authkit-plus", "-w", "workspace.yaml"]),
+            patch("dagster_authkit_plus.cli.main.config") as mock_config,
             patch.object(dagster_webserver.cli, "main", mock_dagster_main),
         ):
             mock_config.AUTH_BACKEND = "dummy"
             mock_config.__dict__ = {"AUTH_BACKEND": "dummy"}
             with pytest.raises(SystemExit) as exc:
-                from dagster_authkit.cli.main import main
+                from dagster_authkit_plus.cli.main import main
                 main()
         assert exc.value.code == 1

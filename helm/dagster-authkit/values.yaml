@@ -5,7 +5,9 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/maltzsama/dagster-authkit
+  # dagster-authkit-plus does not publish an image: build one from this
+  # repository's Dockerfile and push it to your own registry.
+  repository: dagster-authkit-plus
   pullPolicy: IfNotPresent
   tag: ""  # Defaults to the chart's appVersion
 

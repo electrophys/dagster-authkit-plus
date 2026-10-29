@@ -28,9 +28,9 @@ from dagster._core.types.loadable_target_origin import LoadableTargetOrigin
 from dagster._core.workspace.context import WorkspaceProcessContext
 from dagster._core.workspace.load_target import InProcessWorkspaceLoadTarget
 
-from dagster_authkit.auth.backends.base import AuthUser, Role
-from dagster_authkit.auth.session import sessions
-from dagster_authkit.utils.config import config
+from dagster_authkit_plus.auth.backends.base import AuthUser, Role
+from dagster_authkit_plus.auth.session import sessions
+from dagster_authkit_plus.utils.config import config
 from tests.test_location_rbac import _restore_patch_targets, _save_patch_targets
 
 DEFS_FILE = str(Path(__file__).with_name("location_rbac_defs.py"))
@@ -95,7 +95,7 @@ def granted_server():
 def _server(visibility):
     import dagster_webserver.webserver as webserver_module
 
-    from dagster_authkit.core.patch import apply_patches
+    from dagster_authkit_plus.core.patch import apply_patches
 
     cls = webserver_module.DagsterWebserver
     saved = _save_patch_targets(cls)
@@ -430,7 +430,7 @@ class TestLocationVisibilityOtherReads:
         assert "errors" not in own, own
 
     def test_schedule_state_of_hidden_location_hidden(self, granted_server):
-        from dagster_authkit.core.location_visibility import filter_workspace, scoped_instance
+        from dagster_authkit_plus.core.location_visibility import filter_workspace, scoped_instance
 
         app, instance, process_context = granted_server
         admin = AuthUser("root", Role.ADMIN)

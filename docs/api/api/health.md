@@ -1,3 +1,3 @@
 # Health
 
-::: dagster_authkit.api.health
+::: dagster_authkit_plus.api.health

@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
-from dagster_authkit.auth.rate_limiter import (
+from dagster_authkit_plus.auth.rate_limiter import (
     InMemoryRateLimiter,
     RateLimiter,
     get_rate_limiter,
@@ -280,14 +280,14 @@ class TestInMemoryRateLimiterOOM:
     def test_record_login_attempt_disabled(self, monkeypatch):
         """record_login_attempt should return 0 when rate limiter is disabled."""
         monkeypatch.setattr(
-            "dagster_authkit.auth.rate_limiter._rate_limiter.enabled", False
+            "dagster_authkit_plus.auth.rate_limiter._rate_limiter.enabled", False
         )
         assert record_login_attempt("user") == 0
 
     def test_is_rate_limited_disabled(self, monkeypatch):
         """is_rate_limited should return False when disabled."""
         monkeypatch.setattr(
-            "dagster_authkit.auth.rate_limiter._rate_limiter.enabled", False
+            "dagster_authkit_plus.auth.rate_limiter._rate_limiter.enabled", False
         )
         limited, count = is_rate_limited("user")
         assert limited is False
@@ -295,7 +295,7 @@ class TestInMemoryRateLimiterOOM:
     def test_reset_rate_limit_disabled(self, monkeypatch):
         """reset_rate_limit should not raise when disabled."""
         monkeypatch.setattr(
-            "dagster_authkit.auth.rate_limiter._rate_limiter.enabled", False
+            "dagster_authkit_plus.auth.rate_limiter._rate_limiter.enabled", False
         )
         reset_rate_limit("user")  # should not raise
 
@@ -318,7 +318,7 @@ class TestRedisRateLimiter:
         mock_redis_module = MagicMock()
         mock_redis_module.from_url = MagicMock(return_value=mock_redis_instance)
         monkeypatch.setitem(sys.modules, "redis", mock_redis_module)
-        from dagster_authkit.auth.rate_limiter import RedisRateLimiter
+        from dagster_authkit_plus.auth.rate_limiter import RedisRateLimiter
         return RedisRateLimiter(redis_url="redis://localhost:6379/0")
 
     def test_is_rate_limited_under_limit(self, limiter, mock_redis_instance):
@@ -414,7 +414,7 @@ class TestRedisRateLimiter:
 
     def test_check_and_record_logs_warning_when_limited(self, limiter, mock_redis_instance):
         """Should log warning when rate limited."""
-        import dagster_authkit.auth.rate_limiter as rl_mod
+        import dagster_authkit_plus.auth.rate_limiter as rl_mod
         mock_redis_instance.eval.return_value = [1, 5]
         with patch.object(rl_mod.logger, "warning") as mock_warn:
             limited, count = limiter.check_and_record("user1", 5, 300)

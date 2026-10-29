@@ -1,3 +1,3 @@
 # Patch
 
-::: dagster_authkit.core.patch
+::: dagster_authkit_plus.core.patch

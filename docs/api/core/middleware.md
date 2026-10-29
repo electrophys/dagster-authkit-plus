@@ -1,3 +1,3 @@
 # Middleware
 
-::: dagster_authkit.core.middleware
+::: dagster_authkit_plus.core.middleware

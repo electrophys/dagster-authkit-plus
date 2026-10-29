@@ -5,9 +5,9 @@ type: application
 version: 1.2.0  # x-release-please-version
 appVersion: "1.2.0"  # x-release-please-version
 kubeVersion: ">=1.23.0-0"
-home: https://github.com/maltzsama/dagster-authkit
+home: https://github.com/electrophys/dagster-authkit-plus
 sources:
-  - https://github.com/maltzsama/dagster-authkit
+  - https://github.com/electrophys/dagster-authkit-plus
 keywords:
   - dagster
   - authentication
@@ -17,13 +17,13 @@ keywords:
 maintainers:
   - name: Demetrius Albuquerque
     email: demetrius.albuquerque@yahoo.com.br
-icon: https://maltzsama.github.io/dagster-authkit/assets/icon.svg
+icon: https://electrophys.github.io/dagster-authkit-plus/assets/icon.svg
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/links: |
     - name: Documentation
-      url: https://maltzsama.github.io/dagster-authkit/
+      url: https://electrophys.github.io/dagster-authkit-plus/
     - name: PyPI
-      url: https://pypi.org/project/dagster-authkit/
+      url: https://pypi.org/project/dagster-authkit-plus/
     - name: Changelog
-      url: https://github.com/maltzsama/dagster-authkit/blob/main/CHANGELOG.md
+      url: https://github.com/electrophys/dagster-authkit-plus/blob/main/CHANGELOG.md

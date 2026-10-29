@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from dagster_authkit.api.health import (
+from dagster_authkit_plus.api.health import (
     MetricsCollector,
     _check_db_connection,
     get_health_status,
@@ -218,7 +218,7 @@ class TestGetHealthStatus:
     def test_database_check_sql_backend(self, monkeypatch):
         """With SQL backend, health should include database check."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.AUTH_BACKEND", "sql"
+            "dagster_authkit_plus.utils.config.config.AUTH_BACKEND", "sql"
         )
 
         backend = MagicMock()
@@ -226,7 +226,7 @@ class TestGetHealthStatus:
         backend.db = MagicMock()
 
         monkeypatch.setattr(
-            "dagster_authkit.api.health.get_backend",
+            "dagster_authkit_plus.api.health.get_backend",
             lambda name, cfg: backend,
         )
         health = get_health_status()
@@ -235,7 +235,7 @@ class TestGetHealthStatus:
     def test_backend_exception_makes_unhealthy(self, monkeypatch):
         """If get_backend raises, status should be unhealthy."""
         monkeypatch.setattr(
-            "dagster_authkit.api.health.get_backend",
+            "dagster_authkit_plus.api.health.get_backend",
             lambda name, cfg: (_ for _ in ()).throw(Exception("Backend error")),
         )
         health = get_health_status()
@@ -276,14 +276,14 @@ class TestHealthEndpoint:
     async def test_readiness_db_failure(self, mock_request, monkeypatch):
         """type=ready with failed DB should return 503."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.AUTH_BACKEND", "sql"
+            "dagster_authkit_plus.utils.config.config.AUTH_BACKEND", "sql"
         )
         mock_request.query_params.get.return_value = "ready"
         backend = MagicMock()
         backend.db = MagicMock()
         backend.db.execute_sql.side_effect = Exception("DB down")
         monkeypatch.setattr(
-            "dagster_authkit.api.health.get_backend",
+            "dagster_authkit_plus.api.health.get_backend",
             lambda name, cfg: backend,
         )
         response = await health_endpoint(mock_request)
@@ -296,7 +296,7 @@ class TestHealthEndpoint:
         """type=ready with backend error should return 503."""
         mock_request.query_params.get.return_value = "ready"
         monkeypatch.setattr(
-            "dagster_authkit.api.health.get_backend",
+            "dagster_authkit_plus.api.health.get_backend",
             lambda name, cfg: (_ for _ in ()).throw(Exception("Init failed")),
         )
         response = await health_endpoint(mock_request)
@@ -317,7 +317,7 @@ class TestHealthEndpoint:
         """Full health check with backend error should return 503."""
         mock_request.query_params.get.return_value = "full"
         monkeypatch.setattr(
-            "dagster_authkit.api.health.get_backend",
+            "dagster_authkit_plus.api.health.get_backend",
             lambda name, cfg: (_ for _ in ()).throw(Exception("Broken")),
         )
         response = await health_endpoint(mock_request)
@@ -343,7 +343,7 @@ class TestMetricsEndpoint:
     async def test_no_token_returns_403(self, monkeypatch):
         """When METRICS_TOKEN is set but no token provided, return 403."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.METRICS_TOKEN", "secret"
+            "dagster_authkit_plus.utils.config.config.METRICS_TOKEN", "secret"
         )
         req = MagicMock()
         req.query_params.get.return_value = None
@@ -357,7 +357,7 @@ class TestMetricsEndpoint:
     async def test_wrong_token_query_param_returns_403(self, monkeypatch):
         """Wrong token in query param should return 403."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.METRICS_TOKEN", "correct-token"
+            "dagster_authkit_plus.utils.config.config.METRICS_TOKEN", "correct-token"
         )
         req = MagicMock()
         req.query_params.get.return_value = "wrong-token"
@@ -368,7 +368,7 @@ class TestMetricsEndpoint:
     async def test_wrong_token_header_returns_403(self, monkeypatch):
         """Wrong token in header should return 403."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.METRICS_TOKEN", "correct-token"
+            "dagster_authkit_plus.utils.config.config.METRICS_TOKEN", "correct-token"
         )
         req = MagicMock()
         req.query_params.get.return_value = None
@@ -380,7 +380,7 @@ class TestMetricsEndpoint:
     async def test_correct_token_query_param_returns_200(self, monkeypatch):
         """Correct token in query param should return 200."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.METRICS_TOKEN", "my-token"
+            "dagster_authkit_plus.utils.config.config.METRICS_TOKEN", "my-token"
         )
         req = MagicMock()
         req.query_params.get.return_value = "my-token"
@@ -391,7 +391,7 @@ class TestMetricsEndpoint:
     async def test_correct_token_header_returns_200(self, monkeypatch):
         """Correct token in X-Metrics-Token header should return 200."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.METRICS_TOKEN", "my-token"
+            "dagster_authkit_plus.utils.config.config.METRICS_TOKEN", "my-token"
         )
         req = MagicMock()
         req.query_params.get.return_value = None

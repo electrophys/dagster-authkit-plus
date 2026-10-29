@@ -1,5 +1,5 @@
 """
-Tests for dagster_authkit/api/routes.py
+Tests for dagster_authkit_plus/api/routes.py
 
 Covers:
 - CSRF double-submit cookie pattern
@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from dagster_authkit.api.routes import _generate_csrf_token, _validate_csrf_token
+from dagster_authkit_plus.api.routes import _generate_csrf_token, _validate_csrf_token
 
 
 class TestCsrfDoubleSubmit:
@@ -38,7 +38,7 @@ class TestCsrfDoubleSubmit:
     def test_validate_expired_token(self):
         """Token expirado → inválido."""
         token = _generate_csrf_token()
-        with patch("dagster_authkit.api.routes._CSRF_MAX_AGE", -1):
+        with patch("dagster_authkit_plus.api.routes._CSRF_MAX_AGE", -1):
             assert _validate_csrf_token(token, cookie=token) is False
 
     def test_validate_tampered_token(self):
@@ -49,7 +49,7 @@ class TestCsrfDoubleSubmit:
     @pytest.mark.asyncio
     async def test_login_page_sets_csrf_cookie(self):
         """GET /auth/login deve setar cookie csrf_token."""
-        from dagster_authkit.api.routes import login_page
+        from dagster_authkit_plus.api.routes import login_page
 
         request = MagicMock()
         request.query_params.get.return_value = "/"
@@ -65,7 +65,7 @@ class TestCsrfDoubleSubmit:
     @pytest.mark.asyncio
     async def test_login_page_token_matches_cookie(self):
         """Token no form e no cookie devem ser o mesmo valor."""
-        from dagster_authkit.api.routes import login_page
+        from dagster_authkit_plus.api.routes import login_page
 
         request = MagicMock()
         request.query_params.get.return_value = "/"
@@ -86,7 +86,7 @@ class TestCsrfDoubleSubmit:
         browser's automatic /favicon.ico call, redirected to /auth/login by
         DagsterAuthMiddleware) silently breaks a login form already open in
         the user's browser."""
-        from dagster_authkit.api.routes import login_page
+        from dagster_authkit_plus.api.routes import login_page
 
         existing_token = _generate_csrf_token()
         request = MagicMock()
@@ -105,7 +105,7 @@ class TestCsrfDoubleSubmit:
     @pytest.mark.asyncio
     async def test_login_page_rotates_invalid_existing_csrf_cookie(self):
         """An expired/malformed existing cookie must still be safely replaced."""
-        from dagster_authkit.api.routes import login_page
+        from dagster_authkit_plus.api.routes import login_page
 
         request = MagicMock()
         request.query_params.get.return_value = "/"
@@ -120,7 +120,7 @@ class TestCsrfDoubleSubmit:
     @pytest.mark.asyncio
     async def test_process_login_rejects_mismatched_cookie(self):
         """Cookie diferente do form → redirect com erro."""
-        from dagster_authkit.api.routes import process_login
+        from dagster_authkit_plus.api.routes import process_login
 
         form_token = _generate_csrf_token()
         cookie_token = _generate_csrf_token()
@@ -144,7 +144,7 @@ class TestCsrfDoubleSubmit:
     @pytest.mark.asyncio
     async def test_process_login_accepts_matching_cookie(self):
         """Cookie e form iguais + credenciais válidas → login OK."""
-        from dagster_authkit.api.routes import process_login
+        from dagster_authkit_plus.api.routes import process_login
 
         token = _generate_csrf_token()
         form_data = {
@@ -160,9 +160,9 @@ class TestCsrfDoubleSubmit:
         request.client.host = "127.0.0.1"
 
         with (
-            patch("dagster_authkit.api.routes.get_rate_limiter") as mock_rl,
-            patch("dagster_authkit.api.routes.get_backend") as mock_get_backend,
-            patch("dagster_authkit.api.routes.sessions") as mock_sessions,
+            patch("dagster_authkit_plus.api.routes.get_rate_limiter") as mock_rl,
+            patch("dagster_authkit_plus.api.routes.get_backend") as mock_get_backend,
+            patch("dagster_authkit_plus.api.routes.sessions") as mock_sessions,
         ):
             mock_limiter = MagicMock()
             mock_limiter.check_and_record.return_value = (False, 1)

@@ -1,5 +1,5 @@
 # =============================================================================
-# dagster-authkit - Makefile
+# dagster-authkit-plus - Makefile
 # Professional development workflow automation
 # =============================================================================
 
@@ -9,7 +9,7 @@
 help:
 	@echo ""
 	@echo "╔════════════════════════════════════════════════════════════════╗"
-	@echo "║           dagster-authkit - Development Commands              ║"
+	@echo "║           dagster-authkit-plus - Development Commands              ║"
 	@echo "╚════════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "📦 Environment Management:"
@@ -96,22 +96,22 @@ test: check-venv
 # Run tests with coverage
 test-cov: check-venv
 	@echo "🧪 Running tests with coverage..."
-	@uv run pytest tests/ --cov=dagster_authkit --cov-report=html --cov-report=term
+	@uv run pytest tests/ --cov=dagster_authkit_plus --cov-report=html --cov-report=term
 	@echo ""
 	@echo "📊 Coverage report generated at htmlcov/index.html"
 
 # Lint code
 lint: check-venv
 	@echo "🔍 Checking code quality..."
-	@uv run ruff check dagster_authkit/ tests/ || true
-	@uv run black --check dagster_authkit/ tests/ || true
+	@uv run ruff check dagster_authkit_plus/ tests/ || true
+	@uv run black --check dagster_authkit_plus/ tests/ || true
 	@echo "✅ Lint check complete"
 
 # Auto-format code
 format: check-venv
 	@echo "✨ Formatting code..."
-	@uv run black dagster_authkit/ tests/
-	@uv run ruff check --fix dagster_authkit/ tests/ || true
+	@uv run black dagster_authkit_plus/ tests/
+	@uv run ruff check --fix dagster_authkit_plus/ tests/ || true
 	@echo "✅ Code formatted"
 
 # Run all checks
@@ -126,13 +126,13 @@ check: lint test
 # Initialize database with admin user
 init-db: check-venv
 	@echo "🗄️  Initializing database..."
-	@uv run dagster-authkit init-db --with-admin
+	@uv run dagster-authkit-plus init-db --with-admin
 	@echo "✅ Database initialized"
 
 # List all users
 list-users: check-venv
 	@echo "👥 Listing users..."
-	@uv run dagster-authkit list-users
+	@uv run dagster-authkit-plus list-users
 
 # Add user (usage: make add-user USER=username)
 add-user: check-venv
@@ -142,7 +142,7 @@ add-user: check-venv
 		exit 1; \
 	fi
 	@echo "➕ Adding user '$(USER)'..."
-	@uv run dagster-authkit add-user $(USER) --admin
+	@uv run dagster-authkit-plus add-user $(USER) --admin
 
 # =============================================================================
 # Cleanup
@@ -244,7 +244,7 @@ version:
 info:
 	@echo ""
 	@echo "📋 Project Information:"
-	@echo "  Name:    dagster-authkit"
+	@echo "  Name:    dagster-authkit-plus"
 	@echo "  Version: $$(grep '^version' pyproject.toml | cut -d'"' -f2)"
 	@echo "  Python:  $$(cat .python-version 2>/dev/null || echo 'not set')"
 	@echo "  UV:      $$(uv --version 2>/dev/null || echo 'not installed')"

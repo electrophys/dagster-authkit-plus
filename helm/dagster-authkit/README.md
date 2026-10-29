@@ -1,12 +1,23 @@
-# dagster-authkit
+# dagster-authkit (dagster-authkit-plus)
 
 Authentication, RBAC and audit logging for self-hosted Dagster OSS. This chart
-runs the Dagster webserver wrapped by [dagster-authkit](https://github.com/maltzsama/dagster-authkit).
+runs the Dagster webserver wrapped by
+[dagster-authkit-plus](https://github.com/electrophys/dagster-authkit-plus), a fork of
+[dagster-authkit](https://github.com/maltzsama/dagster-authkit).
 
 ## Install
 
+This fork publishes neither the chart nor a container image. Build the image
+from the repository's `Dockerfile`, push it to your registry, and install the
+chart from a checkout:
+
 ```bash
-helm upgrade --install dagster-authkit oci://ghcr.io/maltzsama/charts/dagster-authkit \
+docker build -t registry.example.com/dagster-authkit-plus:1.3.0 .
+docker push registry.example.com/dagster-authkit-plus:1.3.0
+
+helm upgrade --install dagster-authkit ./helm/dagster-authkit \
+  --set image.repository=registry.example.com/dagster-authkit-plus \
+  --set image.tag=1.3.0 \
   --set authkit.secretKey="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')" \
   --set authkit.adminPassword="your-admin-password"
 ```
@@ -24,9 +35,9 @@ Requires Kubernetes 1.23+ and Helm 3.8+.
 
 ## What gets deployed
 
-- A Deployment running `dagster-authkit` as uid 1000 with a read-only root
-  filesystem. The image is `ghcr.io/maltzsama/dagster-authkit`, at the chart's
-  `appVersion` unless `image.tag` is set.
+- A Deployment running `dagster-authkit-plus` as uid 1000 with a read-only root
+  filesystem. The image is `image.repository`, at the chart's `appVersion`
+  unless `image.tag` is set.
 - A Service on port 3000, and optionally an Ingress and an HPA.
 - A ConfigMap and a Secret with the authkit configuration.
 - A 1Gi PersistentVolumeClaim mounted at `/data`, holding the SQLite user
@@ -107,9 +118,9 @@ dagster:
         enabled: false
 ```
 
-The published image contains `dagster` and `dagster-webserver` only. Storage
+The image built from the `Dockerfile` contains `dagster` and `dagster-webserver` only. Storage
 and run launcher plugins such as `dagster-postgres` or `dagster-k8s` are not
-included: build an image `FROM ghcr.io/maltzsama/dagster-authkit` that installs
+included: build an image `FROM` your dagster-authkit-plus image that installs
 them, and set `image.repository` to it.
 
 ### More than one replica

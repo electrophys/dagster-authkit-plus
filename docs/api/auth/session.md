@@ -1,3 +1,3 @@
 # Session
 
-::: dagster_authkit.auth.session
+::: dagster_authkit_plus.auth.session

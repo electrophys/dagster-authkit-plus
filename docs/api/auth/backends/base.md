@@ -1,3 +1,3 @@
 # Auth Backend Base
 
-::: dagster_authkit.auth.backends.base
+::: dagster_authkit_plus.auth.backends.base

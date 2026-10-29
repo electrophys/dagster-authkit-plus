@@ -10,7 +10,7 @@ Covers:
 
 import pytest
 
-from dagster_authkit.auth.backends.base import (
+from dagster_authkit_plus.auth.backends.base import (
     AuthBackend,
     AuthUser,
     Role,

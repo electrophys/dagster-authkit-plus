@@ -1,3 +1,3 @@
 # GraphQL Analyzer
 
-::: dagster_authkit.core.graphql_analyzer
+::: dagster_authkit_plus.core.graphql_analyzer

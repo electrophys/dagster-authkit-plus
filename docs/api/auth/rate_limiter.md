@@ -1,3 +1,3 @@
 # Rate Limiter
 
-::: dagster_authkit.auth.rate_limiter
+::: dagster_authkit_plus.auth.rate_limiter

@@ -1,3 +1,3 @@
 # Registry
 
-::: dagster_authkit.core.registry
+::: dagster_authkit_plus.core.registry

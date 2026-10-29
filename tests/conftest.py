@@ -1,5 +1,5 @@
 """
-Shared fixtures and configuration for dagster-authkit test suite.
+Shared fixtures and configuration for dagster-authkit-plus test suite.
 
 Provides reusable test data, mock objects, and environment setup
 to keep tests DRY and maintainable.
@@ -7,7 +7,7 @@ to keep tests DRY and maintainable.
 
 import os
 
-# Must be set BEFORE dagster_authkit modules are imported, because
+# Must be set BEFORE dagster_authkit_plus modules are imported, because
 # AuthConfig runs at module level and fails in production without a key.
 os.environ.setdefault("DAGSTER_AUTH_ENV", "testing")
 os.environ.setdefault("DAGSTER_AUTH_SECRET_KEY", "test-secret-key-for-pytest")
@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from dagster_authkit.auth.backends.base import AuthUser, Role
+from dagster_authkit_plus.auth.backends.base import AuthUser, Role
 
 
 @pytest.fixture

@@ -8,7 +8,7 @@ Covers:
 
 import logging
 
-from dagster_authkit.utils.logging import setup_logging
+from dagster_authkit_plus.utils.logging import setup_logging
 
 
 class TestSetupLogging:
@@ -20,9 +20,9 @@ class TestSetupLogging:
         assert isinstance(logger, logging.Logger)
 
     def test_logger_name_is_dagster_authkit(self):
-        """Returned logger should be named 'dagster_authkit'."""
+        """Returned logger should be named 'dagster_authkit_plus'."""
         logger = setup_logging()
-        assert logger.name == "dagster_authkit"
+        assert logger.name == "dagster_authkit_plus"
 
     def test_log_level_defaults_to_info(self):
         """Default LOG_LEVEL should be INFO."""
@@ -34,10 +34,10 @@ class TestSetupLogging:
         monkeypatch.setenv("DAGSTER_AUTH_LOG_LEVEL", "DEBUG")
         from importlib import reload
 
-        from dagster_authkit.utils import config
+        from dagster_authkit_plus.utils import config
         reload(config)
-        from dagster_authkit.utils import logging as log_mod
+        from dagster_authkit_plus.utils import logging as log_mod
         reload(log_mod)
-        from dagster_authkit.utils.logging import setup_logging
+        from dagster_authkit_plus.utils.logging import setup_logging
         logger = setup_logging()
         assert logger.level == logging.DEBUG

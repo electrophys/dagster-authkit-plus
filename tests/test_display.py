@@ -8,7 +8,7 @@ Covers:
 """
 
 
-from dagster_authkit.utils.display import (
+from dagster_authkit_plus.utils.display import (
     print_banner,
     print_config_summary,
     show_security_banner,

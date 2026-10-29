@@ -13,7 +13,7 @@
 
    If authkit.adminPassword is empty, no admin is bootstrapped.
    Create one manually:
-     kubectl exec deploy/{{ include "dagster-authkit.fullname" . }} -- dagster-authkit add-user admin --admin
+     kubectl exec deploy/{{ include "dagster-authkit.fullname" . }} -- dagster-authkit-plus add-user admin --admin
 
 3. If you didn't set a workspace, the server starts with --empty-workspace.
    Set dagster.workspace.content (workspace.yaml), module or file in your values.

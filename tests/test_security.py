@@ -13,7 +13,7 @@ Covers:
 
 import re
 
-from dagster_authkit.auth.security import SecurityHardening
+from dagster_authkit_plus.auth.security import SecurityHardening
 
 
 class TestConstantTimeCompare:

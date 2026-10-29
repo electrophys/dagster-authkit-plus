@@ -1,6 +1,6 @@
-site_name: Dagster AuthKit
+site_name: Dagster AuthKit Plus
 site_description: Community authentication wrapper for self-hosted Dagster OSS
-repo_url: https://github.com/maltzsama/dagster-authkit
+repo_url: https://github.com/electrophys/dagster-authkit-plus
 
 theme:
   name: material
@@ -28,7 +28,7 @@ nav:
   - Home: index.md
   - Changelog: CHANGELOG.md
   - API Reference:
-      - Package: api/dagster_authkit.md
+      - Package: api/dagster_authkit_plus.md
       - Config: api/config.md
       - Auth:
           - Backend Base: api/auth/backends/base.md

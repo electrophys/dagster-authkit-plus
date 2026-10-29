@@ -1,3 +1,3 @@
 # SQL Backend
 
-::: dagster_authkit.auth.backends.sql
+::: dagster_authkit_plus.auth.backends.sql

@@ -1,5 +1,5 @@
 """
-Multi-pod integration tests for dagster-authkit.
+Multi-pod integration tests for dagster-authkit-plus.
 
 Validates that auth works correctly across pod boundaries without Docker:
 - CSRF tokens signed on one "pod" validate on another (same SECRET_KEY)
@@ -9,8 +9,8 @@ Validates that auth works correctly across pod boundaries without Docker:
 
 from itsdangerous import URLSafeTimedSerializer
 
-from dagster_authkit.auth.backends.base import Role
-from dagster_authkit.auth.session import CookieBackend
+from dagster_authkit_plus.auth.backends.base import Role
+from dagster_authkit_plus.auth.session import CookieBackend
 
 
 class TestCrossPodSessions:

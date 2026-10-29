@@ -1,5 +1,5 @@
 """
-Unit tests for dagster_authkit/auth/backends/ldap.py
+Unit tests for dagster_authkit_plus/auth/backends/ldap.py
 
 Covers:
 - Initialisation (config validation, TLS, server init, group patterns)
@@ -19,8 +19,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from dagster_authkit.auth.backends.base import Role
-from dagster_authkit.auth.backends.ldap import LDAPAuthBackend
+from dagster_authkit_plus.auth.backends.base import Role
+from dagster_authkit_plus.auth.backends.ldap import LDAPAuthBackend
 
 # ---------------------------------------------------------------------------
 # Fake ldap3 module fixture

@@ -1,9 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "134f32959b1b5ed7dc8cf2fa82ac520ed9c55953",
   "packages": {
     ".": {
       "release-type": "python",
-      "package-name": "dagster-authkit",
+      "package-name": "dagster-authkit-plus",
       "include-component-in-tag": false,
       "extra-files": [
         {
@@ -12,7 +13,11 @@
         },
         {
           "type": "generic",
-          "path": "dagster_authkit/core/detection_layer.py"
+          "path": "dagster_authkit_plus/core/detection_layer.py"
+        },
+        {
+          "type": "generic",
+          "path": "dagster_authkit_plus/__init__.py"
         }
       ]
     }

@@ -11,8 +11,8 @@ Covers:
 
 import pytest
 
-from dagster_authkit.auth.backends.base import AuthBackend
-from dagster_authkit.core.registry import (
+from dagster_authkit_plus.auth.backends.base import AuthBackend
+from dagster_authkit_plus.core.registry import (
     BackendRegistry,
     get_backend,
     list_available_backends,

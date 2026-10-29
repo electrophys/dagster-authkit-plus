@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from dagster_authkit.core import detection_layer
-from dagster_authkit.core.detection_layer import (
+from dagster_authkit_plus.core import detection_layer
+from dagster_authkit_plus.core.detection_layer import (
     check_and_exit_if_incompatible,
     get_compatibility_report,
     print_compatibility_warning,

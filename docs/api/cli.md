@@ -1,11 +1,11 @@
 # CLI
 
-::: dagster_authkit.cli.main
+::: dagster_authkit_plus.cli.main
     options:
       members:
         - main
 
-::: dagster_authkit.cli.cli_tools
+::: dagster_authkit_plus.cli.cli_tools
     options:
       members:
         - init_db_command

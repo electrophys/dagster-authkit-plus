@@ -1,17 +1,20 @@
-# 🛡️ Dagster AuthKit
+# 🛡️ Dagster AuthKit Plus
 
 [![Python Version](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12%20|%203.13%20|%203.14-blue.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![Build Status](https://github.com/maltzsama/dagster-authkit/workflows/CI/badge.svg)](https://github.com/maltzsama/dagster-authkit/actions)
+[![Build Status](https://github.com/electrophys/dagster-authkit-plus/workflows/CI/badge.svg)](https://github.com/electrophys/dagster-authkit-plus/actions)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg?logo=open-source-initiative&logoColor=white)](https://opensource.org/licenses/Apache-2.0)
-[![Coverage](https://codecov.io/gh/maltzsama/dagster-authkit/branch/main/graph/badge.svg)](https://codecov.io/gh/maltzsama/dagster-authkit)
-[![PyPI Version](https://img.shields.io/pypi/v/dagster-authkit?color=blue&logo=pypi&logoColor=white)](https://pypi.org/project/dagster-authkit/)
-[![GitHub Repo stars](https://img.shields.io/github/stars/maltzsama/dagster-authkit?style=social)](https://github.com/maltzsama/dagster-authkit)
-[![Downloads](https://img.shields.io/pypi/dm/dagster-authkit?logo=pypi&logoColor=white)](https://pypi.org/project/dagster-authkit/)
-[![Downloads](https://static.pepy.tech/badge/dagster-authkit)](https://pepy.tech/project/dagster-authkit)
+[![PyPI Version](https://img.shields.io/pypi/v/dagster-authkit-plus?color=blue&logo=pypi&logoColor=white)](https://pypi.org/project/dagster-authkit-plus/)
 
 **Community authentication wrapper for self-hosted Dagster OSS.**
 
 *Authentication, RBAC, and Audit logs for Dagster without touching internal code.*
+
+> **dagster-authkit-plus** is a fork of [dagster-authkit](https://github.com/maltzsama/dagster-authkit) that adds
+> [roles per code location](#roles-per-code-location-proxy-mode) and the option to
+> [hide other teams' code locations](#hiding-other-teams-code-locations). Configuration is unchanged
+> (the same `DAGSTER_AUTH_*` environment variables); the package is `dagster-authkit-plus`, the import
+> package is `dagster_authkit_plus` and the command is `dagster-authkit-plus`. Uninstall `dagster-authkit`
+> before installing it.
 
 ---
 
@@ -30,7 +33,13 @@ Dagster OSS has no auth. If you run it in a VPC or locally, anyone with the URL 
 
 ---
 
-## ✨ What's New in v1.0.0
+## ✨ What's New in the Plus fork
+
+- **Roles per code location** from identity-provider groups, enforced through Dagster's own permission checks (the UI disables buttons where the user can't act).
+- **Hiding code locations** a user holds no role in: workspace, runs, logs, backfills and asset history.
+- Tested on Dagster 1.10–1.13.
+
+## ✨ What's New in dagster-authkit v1.0.0
 
 ### ☸️ Helm Chart
 - **Production-ready Kubernetes chart** under `helm/dagster-authkit/`, synced with the application's config (env vars, secrets, image tag) and versioned automatically on each release.
@@ -132,13 +141,13 @@ If you aren't using Docker, you can install via pip.
 
 ```bash
 # For local testing (SQLite)
-pip install dagster-authkit[sqlite]
+pip install dagster-authkit-plus[sqlite]
 
 # For server usage (Postgres + Redis recommended)
-pip install dagster-authkit[postgresql,redis]
+pip install dagster-authkit-plus[postgresql,redis]
 
 # For LDAP/Active Directory integration (**Experimental**)
-pip install dagster-authkit[ldap]
+pip install dagster-authkit-plus[ldap]
 
 ```
 
@@ -146,28 +155,20 @@ pip install dagster-authkit[ldap]
 
 ```bash
 # Initialize the database and create the first admin
-dagster-authkit init-db --with-admin
+dagster-authkit-plus init-db --with-admin
 
 # Run Dagster (replaces the standard 'dagster-webserver' command)
-dagster-authkit -f your_pipeline.py -h 0.0.0.0 -p 3000
+dagster-authkit-plus -f your_pipeline.py -h 0.0.0.0 -p 3000
 
 # For proxy mode (Authelia/OAuth2 Proxy)
 export DAGSTER_AUTH_BACKEND=proxy
 export DAGSTER_AUTH_PROXY_LOGIN_URL=https://auth.yourcompany.com
-dagster-authkit -f your_pipeline.py -h 0.0.0.0 -p 3000
+dagster-authkit-plus -f your_pipeline.py -h 0.0.0.0 -p 3000
 ```
 
 ### ☸️ Helm (Kubernetes)
 
-The chart is published as an OCI artifact on GHCR, together with the container image:
-
-```bash
-helm upgrade --install dagster-authkit oci://ghcr.io/maltzsama/charts/dagster-authkit \
-  --set authkit.secretKey="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')" \
-  --set authkit.adminPassword="your-admin-password"
-```
-
-See the [chart README](./helm/dagster-authkit/README.md) for configuration and examples.
+This fork publishes neither the chart nor a container image: build the image from the `Dockerfile`, push it to your registry and install the chart from a checkout. See the [chart README](./helm/dagster-authkit/README.md).
 
 ---
 
@@ -275,16 +276,16 @@ Manage users directly from the shell. Useful for CI/CD or admin tasks.
 
 ```bash
 # Create a new launcher
-dagster-authkit add-user bob --launcher
+dagster-authkit-plus add-user bob --launcher
 
 # Reset password
-dagster-authkit change-password bob
+dagster-authkit-plus change-password bob
 
 # List everyone
-dagster-authkit list-users
+dagster-authkit-plus list-users
 
 # View RBAC permissions matrix
-dagster-authkit list-permissions
+dagster-authkit-plus list-permissions
 ```
 
 ---
@@ -344,6 +345,6 @@ Apache 2.0 - see [LICENSE](LICENSE)
 
 ## 🙏 Credits
 
-Built by [Demetrius Albuquerque](https://github.com/demetrius-mp) because self-hosting Dagster shouldn't mean no auth.
+Built by [Demetrius Albuquerque](https://github.com/demetrius-mp) because self-hosting Dagster shouldn't mean no auth. dagster-authkit-plus is maintained by Isaac Henry as a fork of [dagster-authkit](https://github.com/maltzsama/dagster-authkit).
 
 Inspired by the community's need for a middle ground between "no auth" and "pay for Dagster+".

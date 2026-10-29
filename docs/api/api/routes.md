@@ -1,3 +1,3 @@
 # Routes
 
-::: dagster_authkit.api.routes
+::: dagster_authkit_plus.api.routes

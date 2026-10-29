@@ -1,3 +1,3 @@
 # Templates
 
-::: dagster_authkit.utils.templates
+::: dagster_authkit_plus.utils.templates

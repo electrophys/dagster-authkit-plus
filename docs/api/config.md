@@ -1,3 +1,3 @@
 # Config
 
-::: dagster_authkit.utils.config
+::: dagster_authkit_plus.utils.config

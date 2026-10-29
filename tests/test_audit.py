@@ -15,7 +15,7 @@ import logging
 
 import pytest
 
-from dagster_authkit.utils.audit import (
+from dagster_authkit_plus.utils.audit import (
     AuditLogger,
     log_access_control,
     log_audit_event,
@@ -39,7 +39,7 @@ def captured_output():
     handler = logging.StreamHandler(capture)
     handler.setFormatter(logging.Formatter("%(message)s"))
 
-    audit_log = logging.getLogger("dagster_authkit.audit")
+    audit_log = logging.getLogger("dagster_authkit_plus.audit")
     audit_log.handlers.clear()
     audit_log.addHandler(handler)
     audit_log.setLevel(logging.INFO)
@@ -53,8 +53,8 @@ class TestAuditLogger:
     """Verifies the AuditLogger class."""
 
     def test_default_service_name(self, audit_logger):
-        """Default service name should be 'dagster-authkit'."""
-        assert audit_logger.service == "dagster-authkit"
+        """Default service name should be 'dagster-authkit-plus'."""
+        assert audit_logger.service == "dagster-authkit-plus"
 
     def test_emit_includes_timestamp(self, captured_output, audit_logger):
         """Emitted events should include an ISO 8601 timestamp."""
@@ -69,7 +69,7 @@ class TestAuditLogger:
         audit_logger.log_event("TEST_EVENT", "system")
         output = captured_output.getvalue()
         data = json.loads(output)
-        assert data["service"] == "dagster-authkit"
+        assert data["service"] == "dagster-authkit-plus"
 
     def test_emit_includes_env(self, captured_output, audit_logger):
         """Emitted events should include the environment."""

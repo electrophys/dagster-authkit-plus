@@ -1,0 +1,22 @@
+"""
+dagster-authkit-plus
+
+Production-ready authentication and UI orchestration for Dagster OSS.
+"""
+
+__version__ = "1.2.0"  # x-release-please-version
+
+from .auth.backends.base import AuthBackend
+from .core.registry import get_backend, list_available_backends
+
+# Export public API - All comments in English as requested
+from .utils.config import config
+
+# Primary entrypoints for the package
+__all__ = [
+    "__version__",
+    "AuthBackend",
+    "get_backend",
+    "list_available_backends",
+    "config",
+]

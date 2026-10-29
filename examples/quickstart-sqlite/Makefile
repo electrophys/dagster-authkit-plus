@@ -27,7 +27,7 @@ help:
 
 init-db:
 	@echo "🔧 Initializing database..."
-	@docker-compose exec dagster dagster-authkit init-db --with-admin
+	@docker-compose exec dagster dagster-authkit-plus init-db --with-admin
 	@echo "✅ Database initialized with admin user"
 
 up:

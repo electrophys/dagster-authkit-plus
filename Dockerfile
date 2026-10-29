@@ -51,5 +51,5 @@ USER 1000
 EXPOSE 3000
 
 # The entrypoint is our CLI that patches and starts the server
-ENTRYPOINT ["dagster-authkit"]
+ENTRYPOINT ["dagster-authkit-plus"]
 CMD ["-h", "0.0.0.0", "-p", "3000"]

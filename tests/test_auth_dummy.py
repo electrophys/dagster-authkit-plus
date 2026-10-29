@@ -10,8 +10,8 @@ Covers:
 
 import pytest
 
-from dagster_authkit.auth.backends.base import Role
-from dagster_authkit.auth.backends.dummy import DummyAuthBackend
+from dagster_authkit_plus.auth.backends.base import Role
+from dagster_authkit_plus.auth.backends.dummy import DummyAuthBackend
 
 
 class TestDummyAuthBackend:

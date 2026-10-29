@@ -1,3 +1,3 @@
 # Security
 
-::: dagster_authkit.auth.security
+::: dagster_authkit_plus.auth.security

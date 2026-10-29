@@ -3,14 +3,17 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dagster-authkit"
+name = "dagster-authkit-plus"
 version = "1.2.0"
-description = "Community Auth System for self-hosted Dagster OSS - RBAC, Audit Logging, and Session Management"
+description = "Auth, per-code-location RBAC and audit logging for self-hosted Dagster OSS (fork of dagster-authkit)"
 readme = "README.md"
 requires-python = ">=3.10, <3.15"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "Demetrius Albuquerque", email = "demetrius.albuquerque@yahoo.com.br"}
+]
+maintainers = [
+    {name = "Isaac Henry"}
 ]
 keywords = [
     "dagster", "data-orchestration", "data-pipeline", "authentication",
@@ -89,27 +92,28 @@ test = [
 ]
 
 # Install everything
-all = ["dagster-authkit[sqlite,postgresql,mysql,mariadb,redis,ldap,oauth]"]
+all = ["dagster-authkit-plus[sqlite,postgresql,mysql,mariadb,redis,ldap,oauth]"]
 
 [project.urls]
-Homepage = "https://github.com/maltzsama/dagster-authkit"
-Repository = "https://github.com/maltzsama/dagster-authkit"
-Issues = "https://github.com/maltzsama/dagster-authkit/issues"
+Homepage = "https://github.com/electrophys/dagster-authkit-plus"
+Repository = "https://github.com/electrophys/dagster-authkit-plus"
+Issues = "https://github.com/electrophys/dagster-authkit-plus/issues"
+Upstream = "https://github.com/maltzsama/dagster-authkit"
 
 [project.scripts]
-dagster-authkit = "dagster_authkit.cli.main:main"
+dagster-authkit-plus = "dagster_authkit_plus.cli.main:main"
 
 [project.entry-points."dagster_auth.backends"]
-dummy = "dagster_authkit.auth.backends.dummy:DummyAuthBackend"
-sql = "dagster_authkit.auth.backends.sql:PeeweeAuthBackend"
-sqlite = "dagster_authkit.auth.backends.sql:PeeweeAuthBackend" # Alias for compatibility
-ldap = "dagster_authkit.auth.backends.ldap:LDAPAuthBackend"
-proxy = "dagster_authkit.auth.backends.proxy:ProxyAuthBackend"
-oauth = "dagster_authkit.auth.backends.oauth:OAuthBackend"
+dummy = "dagster_authkit_plus.auth.backends.dummy:DummyAuthBackend"
+sql = "dagster_authkit_plus.auth.backends.sql:PeeweeAuthBackend"
+sqlite = "dagster_authkit_plus.auth.backends.sql:PeeweeAuthBackend" # Alias for compatibility
+ldap = "dagster_authkit_plus.auth.backends.ldap:LDAPAuthBackend"
+proxy = "dagster_authkit_plus.auth.backends.proxy:ProxyAuthBackend"
+oauth = "dagster_authkit_plus.auth.backends.oauth:OAuthBackend"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["dagster_authkit*"]
+include = ["dagster_authkit_plus*"]
 
 [tool.black]
 line-length = 100

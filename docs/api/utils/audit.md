@@ -1,3 +1,3 @@
 # Audit
 
-::: dagster_authkit.utils.audit
+::: dagster_authkit_plus.utils.audit

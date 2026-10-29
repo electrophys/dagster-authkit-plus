@@ -21,13 +21,13 @@ from dagster._core.workspace.context import WorkspaceRequestContext
 from dagster._core.workspace.permissions import Permissions
 from starlette.datastructures import State
 
-from dagster_authkit.auth.backends.base import AuthUser, Role
-from dagster_authkit.auth.backends.proxy import ProxyAuthBackend
-from dagster_authkit.auth.location_roles import (
+from dagster_authkit_plus.auth.backends.base import AuthUser, Role
+from dagster_authkit_plus.auth.backends.proxy import ProxyAuthBackend
+from dagster_authkit_plus.auth.location_roles import (
     compile_location_group_pattern,
     parse_location_roles,
 )
-from dagster_authkit.core.location_rbac import (
+from dagster_authkit_plus.core.location_rbac import (
     PERMISSION_ROLES,
     get_connection_user,
     request_context_method_name,
@@ -354,8 +354,8 @@ class TestGetConnectionUser:
 
 
 async def _run_mutation(user, mutation_name, location_rbac):
-    from dagster_authkit.auth.session import sessions
-    from dagster_authkit.core.middleware import DagsterAuthMiddleware
+    from dagster_authkit_plus.auth.session import sessions
+    from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
     seen_scope = {}
 
@@ -417,8 +417,8 @@ class TestMiddlewareLocationRBAC:
 
     @pytest.mark.asyncio
     async def test_websocket_scope_carries_user(self):
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         seen_scope = {}
 
@@ -455,8 +455,8 @@ class TestApplyPatches:
         _restore_patch_targets(cls, saved)
 
     def test_patched_when_enabled(self, webserver_class):
-        from dagster_authkit.core.patch import apply_patches
-        from dagster_authkit.utils.config import config
+        from dagster_authkit_plus.core.patch import apply_patches
+        from dagster_authkit_plus.utils.config import config
 
         method_name = request_context_method_name(webserver_class)
         original = getattr(webserver_class, method_name)
@@ -485,8 +485,8 @@ class TestApplyPatches:
         )
 
     def test_not_patched_when_disabled(self, webserver_class):
-        from dagster_authkit.core.patch import apply_patches
-        from dagster_authkit.utils.config import config
+        from dagster_authkit_plus.core.patch import apply_patches
+        from dagster_authkit_plus.utils.config import config
 
         method_name = request_context_method_name(webserver_class)
         original = getattr(webserver_class, method_name)
@@ -540,7 +540,7 @@ class TestGlobalAccess:
 
 class TestVisibilityConfig:
     def _config(self, monkeypatch, **env):
-        from dagster_authkit.utils.config import AuthConfig
+        from dagster_authkit_plus.utils.config import AuthConfig
 
         for key, value in env.items():
             monkeypatch.setenv(key, value)
@@ -564,7 +564,7 @@ class TestVisibilityRules:
     def visibility(self):
         from dagster._core.workspace.workspace import CurrentWorkspace
 
-        from dagster_authkit.core.location_visibility import _Visibility
+        from dagster_authkit_plus.core.location_visibility import _Visibility
 
         instance = MagicMock()
         instance.get_run_tags.return_value = [
@@ -594,7 +594,7 @@ class TestVisibilityRules:
     def test_runs_filter_matches_nothing_without_visible_locations(self):
         from dagster._core.workspace.workspace import CurrentWorkspace
 
-        from dagster_authkit.core.location_visibility import _Visibility
+        from dagster_authkit_plus.core.location_visibility import _Visibility
 
         instance = MagicMock()
         instance.get_run_tags.return_value = [(".dagster/repository", {"repo@team_b"})]
@@ -631,7 +631,7 @@ class TestVisibilityRules:
     def test_filtered_workspace_is_cached(self):
         from dagster._core.workspace.workspace import CodeLocationEntry, CurrentWorkspace
 
-        from dagster_authkit.core.location_visibility import filter_workspace
+        from dagster_authkit_plus.core.location_visibility import filter_workspace
 
         workspace = CurrentWorkspace(
             code_location_entries={
@@ -677,7 +677,7 @@ class TestVisibilityStartupCheck:
     def test_listed_methods_match_overrides(self):
         from dagster import DagsterInstance
 
-        from dagster_authkit.core.location_visibility import (
+        from dagster_authkit_plus.core.location_visibility import (
             FILTERED_INSTANCE_METHODS,
             _scoped_instance_class,
         )
@@ -691,14 +691,14 @@ class TestVisibilityStartupCheck:
         assert overridden == set(FILTERED_INSTANCE_METHODS)
 
     def test_passes_on_installed_dagster(self):
-        from dagster_authkit.core.detection_layer import _check_location_visibility_api
+        from dagster_authkit_plus.core.detection_layer import _check_location_visibility_api
 
         assert _check_location_visibility_api() is None
 
     def test_fails_when_methods_missing(self, monkeypatch):
         import dagster
 
-        from dagster_authkit.core.detection_layer import _check_location_visibility_api
+        from dagster_authkit_plus.core.detection_layer import _check_location_visibility_api
 
         monkeypatch.setattr(dagster, "DagsterInstance", type("RenamedInstance", (), {}))
         assert "get_backfills" in _check_location_visibility_api()

@@ -13,8 +13,8 @@ Covers:
 
 import html
 
-from dagster_authkit.auth.backends.base import AuthUser, Role
-from dagster_authkit.utils.templates import (
+from dagster_authkit_plus.auth.backends.base import AuthUser, Role
+from dagster_authkit_plus.utils.templates import (
     render_403_page,
     render_login_page,
     render_user_menu_injection,

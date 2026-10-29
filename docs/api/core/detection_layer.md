@@ -1,3 +1,3 @@
 # Detection Layer
 
-::: dagster_authkit.core.detection_layer
+::: dagster_authkit_plus.core.detection_layer

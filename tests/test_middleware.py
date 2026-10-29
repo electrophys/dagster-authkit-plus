@@ -1,5 +1,5 @@
 """
-Unit tests for dagster_authkit/core/middleware.py
+Unit tests for dagster_authkit_plus/core/middleware.py
 
 Covers:
 - WebSocket authentication (public path, failure, success)
@@ -18,11 +18,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from dagster_authkit.auth.backends.base import AuthUser, Role
-from dagster_authkit.auth.security import SecurityHardening
-from dagster_authkit.core.graphql_analyzer import _SENTINEL_UNPARSEABLE, GraphQLMutationAnalyzer
-from dagster_authkit.core.middleware import DagsterAuthMiddleware
-from dagster_authkit.utils.config import config
+from dagster_authkit_plus.auth.backends.base import AuthUser, Role
+from dagster_authkit_plus.auth.security import SecurityHardening
+from dagster_authkit_plus.core.graphql_analyzer import (
+    _SENTINEL_UNPARSEABLE,
+    GraphQLMutationAnalyzer,
+)
+from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
+from dagster_authkit_plus.utils.config import config
 
 
 def _get_header_dict(headers):
@@ -43,7 +46,7 @@ class TestWebSocket:
     @pytest.mark.asyncio
     async def test_public_path_passthrough(self):
         """Public /auth/ paths should pass through without authentication."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -66,7 +69,7 @@ class TestWebSocket:
     @pytest.mark.asyncio
     async def test_auth_failure_closes_connection(self):
         """Unauthenticated WS connections should receive close code 4001."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
         sent_message = None
@@ -98,8 +101,8 @@ class TestWebSocket:
     @pytest.mark.asyncio
     async def test_auth_success_session_mode(self):
         """Authenticated WS connection should pass through."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -124,7 +127,7 @@ class TestWebSocket:
     @pytest.mark.asyncio
     async def test_auth_success_proxy_mode(self):
         """Authenticated WS in proxy mode should pass through."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -141,7 +144,7 @@ class TestWebSocket:
             patch.object(config, "AUTH_BACKEND", "proxy"),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUSTED_IPS", frozenset()),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUST_ALL", True),
-            patch("dagster_authkit.core.middleware.get_backend", return_value=mock_backend),
+            patch("dagster_authkit_plus.core.middleware.get_backend", return_value=mock_backend),
         ):
             mw = DagsterAuthMiddleware(mock_app)
 
@@ -168,7 +171,7 @@ class TestHTTPRouting:
     @pytest.mark.asyncio
     async def test_options_passthrough(self):
         """OPTIONS requests should pass through without any auth."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -199,7 +202,7 @@ class TestHTTPRouting:
         """/auth/health should be handled by health_endpoint."""
         from starlette.responses import JSONResponse
 
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         health_called = False
 
@@ -214,7 +217,7 @@ class TestHTTPRouting:
         async def noop_send(message):
             pass
 
-        with patch("dagster_authkit.core.middleware.health_endpoint", mock_health):
+        with patch("dagster_authkit_plus.core.middleware.health_endpoint", mock_health):
             middleware = DagsterAuthMiddleware(MagicMock())
 
             scope = {
@@ -236,7 +239,7 @@ class TestHTTPRouting:
         """/auth/metrics should be handled by metrics_endpoint."""
         from starlette.responses import JSONResponse
 
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         metrics_called = False
 
@@ -251,7 +254,7 @@ class TestHTTPRouting:
         async def noop_send(message):
             pass
 
-        with patch("dagster_authkit.core.middleware.metrics_endpoint", mock_metrics):
+        with patch("dagster_authkit_plus.core.middleware.metrics_endpoint", mock_metrics):
             middleware = DagsterAuthMiddleware(MagicMock())
 
             scope = {
@@ -271,7 +274,7 @@ class TestHTTPRouting:
     @pytest.mark.asyncio
     async def test_public_path_passthrough(self):
         """Public paths (/auth/login, /auth/logout, /auth/process) skip auth."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         for path in ("/auth/login", "/auth/logout", "/auth/process"):
             app_called = False
@@ -301,7 +304,7 @@ class TestHTTPRouting:
     @pytest.mark.asyncio
     async def test_unauthenticated_graphql_returns_401(self):
         """Unauthenticated POST /graphql should return 401."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 
@@ -336,7 +339,7 @@ class TestHTTPRouting:
     @pytest.mark.asyncio
     async def test_unauthenticated_xhr_returns_401(self):
         """Unauthenticated XMLHttpRequest should return 401."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 
@@ -370,7 +373,7 @@ class TestHTTPRouting:
     @pytest.mark.asyncio
     async def test_unauthenticated_html_redirects_to_login(self):
         """Unauthenticated regular requests should redirect to /auth/login."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 
@@ -406,8 +409,8 @@ class TestHTTPRouting:
         """Authenticated user should be stored in scope state."""
         from starlette.datastructures import State
 
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         captured_scope = None
 
@@ -444,8 +447,8 @@ class TestHTTPRouting:
         """Existing scope state dict should be merged into the State object."""
         from starlette.datastructures import State
 
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         captured_scope = None
 
@@ -560,7 +563,7 @@ class TestServiceToken:
     @pytest.mark.asyncio
     async def test_wrong_token_returns_401_and_audits(self):
         """A wrong token should be rejected and recorded in the audit log."""
-        with patch("dagster_authkit.core.middleware.log_login_attempt") as mock_audit:
+        with patch("dagster_authkit_plus.core.middleware.log_login_attempt") as mock_audit:
             scope, sent_messages = await self._run(
                 [(b"dagster-cloud-api-token", b"x" * 32)]
             )
@@ -584,7 +587,7 @@ class TestServiceToken:
     @pytest.mark.asyncio
     async def test_empty_token_returns_401_and_audits(self):
         """An empty header value is still a presented (invalid) token, not a missing one."""
-        with patch("dagster_authkit.core.middleware.log_login_attempt") as mock_audit:
+        with patch("dagster_authkit_plus.core.middleware.log_login_attempt") as mock_audit:
             scope, sent_messages = await self._run(
                 [(b"dagster-cloud-api-token", b"")], method="GET", path="/server_info"
             )
@@ -598,7 +601,7 @@ class TestServiceToken:
     @pytest.mark.asyncio
     async def test_header_ignored_when_feature_disabled(self):
         """With no token configured, the header must not authenticate anything."""
-        with patch("dagster_authkit.core.middleware.log_login_attempt") as mock_audit:
+        with patch("dagster_authkit_plus.core.middleware.log_login_attempt") as mock_audit:
             scope, sent_messages = await self._run(
                 [(b"dagster-cloud-api-token", self.TOKEN.encode())], token=None
             )
@@ -610,7 +613,7 @@ class TestServiceToken:
     @pytest.mark.asyncio
     async def test_viewer_token_denied_mutation(self):
         """A VIEWER token should go through RBAC and be denied mutations."""
-        with patch("dagster_authkit.core.middleware.log_access_control") as mock_audit:
+        with patch("dagster_authkit_plus.core.middleware.log_access_control") as mock_audit:
             scope, sent_messages = await self._run(
                 [(b"dagster-cloud-api-token", self.TOKEN.encode())],
                 body={"query": "mutation { launchPipelineExecution(executionParams: {}) { __typename } }"},
@@ -624,7 +627,7 @@ class TestServiceToken:
     @pytest.mark.asyncio
     async def test_session_cookie_takes_precedence(self):
         """A valid session should win over the token header."""
-        from dagster_authkit.auth.session import sessions
+        from dagster_authkit_plus.auth.session import sessions
 
         with patch.object(sessions, "validate", return_value={"username": "admin", "role": 40}):
             scope, _ = await self._run(
@@ -676,8 +679,8 @@ class TestGraphQLRBAC:
     @pytest.mark.asyncio
     async def test_allowed_mutation_passes(self):
         """Mutations allowed by user's role should pass through."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -717,8 +720,8 @@ class TestGraphQLRBAC:
     @pytest.mark.asyncio
     async def test_denied_mutation_blocked(self):
         """Mutations denied by user's role should return error response."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -767,8 +770,8 @@ class TestGraphQLRBAC:
     @pytest.mark.asyncio
     async def test_unparseable_query_blocked(self):
         """Unparseable GraphQL queries should return 400."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -814,8 +817,8 @@ class TestGraphQLRBAC:
     @pytest.mark.asyncio
     async def test_empty_batch_passthrough(self):
         """Query with no mutations should pass through."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -851,8 +854,8 @@ class TestGraphQLRBAC:
     @pytest.mark.asyncio
     async def test_invalid_batch_returns_400(self):
         """Non-dict GraphQL batch item should return 400."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
         sent_messages = []
@@ -899,8 +902,8 @@ class TestRESTRBAC:
     @pytest.mark.asyncio
     async def test_viewer_write_blocked(self):
         """VIEWER should be blocked from POST/PUT/DELETE/PATCH to non-GraphQL paths."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         for method in ("POST", "PUT", "DELETE", "PATCH"):
             app_called = False
@@ -939,8 +942,8 @@ class TestRESTRBAC:
     @pytest.mark.asyncio
     async def test_editor_post_allowed(self):
         """EDITOR should be allowed to POST to non-GraphQL paths."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -971,8 +974,8 @@ class TestRESTRBAC:
     @pytest.mark.asyncio
     async def test_launcher_post_blocked(self):
         """LAUNCHER should be blocked from POST to non-GraphQL paths."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 
@@ -1024,7 +1027,7 @@ class TestProxyMode:
     @pytest.mark.asyncio
     async def test_login_endpoint_disabled(self, proxy_backend):
         """GET /auth/login should return 404 in proxy mode."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 
@@ -1041,7 +1044,7 @@ class TestProxyMode:
             patch.object(config, "AUTH_BACKEND", "proxy"),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUSTED_IPS", frozenset({"10.0.0.1"})),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUST_ALL", False),
-            patch("dagster_authkit.core.middleware.get_backend", return_value=proxy_backend),
+            patch("dagster_authkit_plus.core.middleware.get_backend", return_value=proxy_backend),
         ):
             mw = DagsterAuthMiddleware(mock_app)
 
@@ -1062,7 +1065,7 @@ class TestProxyMode:
     @pytest.mark.asyncio
     async def test_process_endpoint_disabled(self, proxy_backend):
         """POST /auth/process should return 404 in proxy mode."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 
@@ -1079,7 +1082,7 @@ class TestProxyMode:
             patch.object(config, "AUTH_BACKEND", "proxy"),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUSTED_IPS", frozenset({"10.0.0.1"})),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUST_ALL", False),
-            patch("dagster_authkit.core.middleware.get_backend", return_value=proxy_backend),
+            patch("dagster_authkit_plus.core.middleware.get_backend", return_value=proxy_backend),
         ):
             mw = DagsterAuthMiddleware(mock_app)
 
@@ -1100,7 +1103,7 @@ class TestProxyMode:
     @pytest.mark.asyncio
     async def test_trusted_proxy_with_headers(self, proxy_backend):
         """Request from trusted proxy with valid headers should pass through."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -1115,7 +1118,7 @@ class TestProxyMode:
             patch.object(config, "AUTH_BACKEND", "proxy"),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUSTED_IPS", frozenset({"10.0.0.1"})),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUST_ALL", False),
-            patch("dagster_authkit.core.middleware.get_backend", return_value=proxy_backend),
+            patch("dagster_authkit_plus.core.middleware.get_backend", return_value=proxy_backend),
         ):
             mw = DagsterAuthMiddleware(mock_app)
 
@@ -1136,7 +1139,7 @@ class TestProxyMode:
     @pytest.mark.asyncio
     async def test_untrusted_proxy_returns_403(self, proxy_backend):
         """Request from untrusted IP should return 403."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 
@@ -1153,7 +1156,7 @@ class TestProxyMode:
             patch.object(config, "AUTH_BACKEND", "proxy"),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUSTED_IPS", frozenset({"10.0.0.1"})),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUST_ALL", False),
-            patch("dagster_authkit.core.middleware.get_backend", return_value=proxy_backend),
+            patch("dagster_authkit_plus.core.middleware.get_backend", return_value=proxy_backend),
         ):
             mw = DagsterAuthMiddleware(mock_app)
 
@@ -1174,7 +1177,7 @@ class TestProxyMode:
     @pytest.mark.asyncio
     async def test_proxy_missing_headers_returns_401(self, proxy_backend):
         """Request from trusted proxy without auth headers should return 401."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         proxy_backend.get_user_from_headers.return_value = None
         sent_messages = []
@@ -1192,7 +1195,7 @@ class TestProxyMode:
             patch.object(config, "AUTH_BACKEND", "proxy"),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUSTED_IPS", frozenset({"10.0.0.1"})),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUST_ALL", False),
-            patch("dagster_authkit.core.middleware.get_backend", return_value=proxy_backend),
+            patch("dagster_authkit_plus.core.middleware.get_backend", return_value=proxy_backend),
         ):
             mw = DagsterAuthMiddleware(mock_app)
 
@@ -1213,7 +1216,7 @@ class TestProxyMode:
     @pytest.mark.asyncio
     async def test_proxy_trust_all_bypasses_ip_check(self, proxy_backend):
         """TRUST_ALL=true should skip IP check."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -1228,7 +1231,7 @@ class TestProxyMode:
             patch.object(config, "AUTH_BACKEND", "proxy"),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUSTED_IPS", frozenset()),
             patch.object(config, "DAGSTER_AUTH_PROXY_TRUST_ALL", True),
-            patch("dagster_authkit.core.middleware.get_backend", return_value=proxy_backend),
+            patch("dagster_authkit_plus.core.middleware.get_backend", return_value=proxy_backend),
         ):
             mw = DagsterAuthMiddleware(mock_app)
 
@@ -1256,7 +1259,7 @@ class TestHelpers:
     """Helper method unit tests."""
 
     def test_is_public_path(self):
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         mw = DagsterAuthMiddleware(MagicMock())
         assert mw._is_public_path("/auth/login") is True
@@ -1410,7 +1413,7 @@ class TestTracking:
     @pytest.mark.asyncio
     async def test_passthrough_tracks_duration(self):
         """_passthrough should call track_request_duration."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         app_called = False
 
@@ -1433,7 +1436,7 @@ class TestTracking:
             "client": ("127.0.0.1", 12345),
         }
 
-        with patch("dagster_authkit.core.middleware.track_request_duration") as mock_track:
+        with patch("dagster_authkit_plus.core.middleware.track_request_duration") as mock_track:
             await middleware._passthrough(scope, receive, None)
 
         assert app_called
@@ -1445,8 +1448,8 @@ class TestTracking:
     @pytest.mark.asyncio
     async def test_rbac_allowed_tracks_decision(self):
         """Allowed mutations should call track_rbac_decision with True."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         async def mock_app(scope, receive, send):
             pass
@@ -1477,7 +1480,7 @@ class TestTracking:
                 "extract_mutation_names",
                 return_value={"launchPipelineExecution"},
             ),
-            patch("dagster_authkit.core.middleware.track_rbac_decision") as mock_track,
+            patch("dagster_authkit_plus.core.middleware.track_rbac_decision") as mock_track,
         ):
             await middleware._handle_http(scope, receive, None)
 
@@ -1486,8 +1489,8 @@ class TestTracking:
     @pytest.mark.asyncio
     async def test_rbac_denied_tracks_decision(self):
         """Denied mutations should call track_rbac_decision with False."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         async def mock_app(scope, receive, send):
             pass
@@ -1523,7 +1526,7 @@ class TestTracking:
                 "extract_mutation_names",
                 return_value={"launchPipelineExecution"},
             ),
-            patch("dagster_authkit.core.middleware.track_rbac_decision") as mock_track,
+            patch("dagster_authkit_plus.core.middleware.track_rbac_decision") as mock_track,
         ):
             await middleware._handle_http(scope, receive, send_fn)
 
@@ -1532,8 +1535,8 @@ class TestTracking:
     @pytest.mark.asyncio
     async def test_rest_denied_logs_access_control(self):
         """Denied REST writes should call log_access_control."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         async def mock_app(scope, receive, send):
             pass
@@ -1560,7 +1563,7 @@ class TestTracking:
 
         with (
             patch.object(sessions, "validate", return_value={"username": "viewer", "role": 10}),
-            patch("dagster_authkit.core.middleware.log_access_control") as mock_log,
+            patch("dagster_authkit_plus.core.middleware.log_access_control") as mock_log,
         ):
             await middleware._handle_http(scope, receive, send_fn)
 
@@ -1569,8 +1572,8 @@ class TestTracking:
     @pytest.mark.asyncio
     async def test_rest_denied_returns_html_forbidden(self):
         """Denied REST writes should return 403 with HTML body."""
-        from dagster_authkit.auth.session import sessions
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.session import sessions
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 

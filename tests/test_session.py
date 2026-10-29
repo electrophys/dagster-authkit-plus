@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from dagster_authkit.auth.session import CookieBackend, SessionManager, sessions
+from dagster_authkit_plus.auth.session import CookieBackend, SessionManager, sessions
 
 
 class TestCookieBackend:
@@ -60,7 +60,7 @@ class TestCookieBackend:
 
     def test_validate_logs_warning_on_failure(self, backend):
         """validate should log a warning with exc_info=True on failure."""
-        import dagster_authkit.auth.session as sess_mod
+        import dagster_authkit_plus.auth.session as sess_mod
         with patch.object(sess_mod.logger, "warning") as mock_warn:
             result = backend.validate("garbage-token")
             assert result is None
@@ -133,7 +133,7 @@ class TestCookieBackendVersioning:
     def test_resolve_version_getter_sql_backend(self, monkeypatch):
         """When AUTH_BACKEND is sql, version getter should be resolved."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.AUTH_BACKEND", "sql"
+            "dagster_authkit_plus.utils.config.config.AUTH_BACKEND", "sql"
         )
         backend = CookieBackend(secret_key="test-key", max_age=3600)
         backend._resolve_version_getter()
@@ -143,7 +143,7 @@ class TestCookieBackendVersioning:
     def test_resolve_version_getter_non_sql_backend(self, monkeypatch):
         """When AUTH_BACKEND is not sql/sqlite, no version getter."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.AUTH_BACKEND", "dummy"
+            "dagster_authkit_plus.utils.config.config.AUTH_BACKEND", "dummy"
         )
         backend = CookieBackend(secret_key="test-key", max_age=3600)
         backend._resolve_version_getter()
@@ -152,7 +152,7 @@ class TestCookieBackendVersioning:
     def test_resolve_idempotent(self, monkeypatch):
         """Calling _resolve_version_getter twice should be idempotent."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.AUTH_BACKEND", "dummy"
+            "dagster_authkit_plus.utils.config.config.AUTH_BACKEND", "dummy"
         )
         backend = CookieBackend(secret_key="test-key", max_age=3600)
         backend._resolve_version_getter()
@@ -177,7 +177,7 @@ class TestCookieBackendVersioning:
             return result
 
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.AUTH_BACKEND", "sql"
+            "dagster_authkit_plus.utils.config.config.AUTH_BACKEND", "sql"
         )
         backend = CookieBackend(secret_key="test-key", max_age=3600)
         backend._version_getter = fake_getter
@@ -191,7 +191,7 @@ class TestCookieBackendVersioning:
     def test_revoke_all_db_backed_raises(self, monkeypatch):
         """In DB-backed mode, revoke_all should raise NotImplementedError."""
         monkeypatch.setattr(
-            "dagster_authkit.utils.config.config.AUTH_BACKEND", "sql"
+            "dagster_authkit_plus.utils.config.config.AUTH_BACKEND", "sql"
         )
         backend = CookieBackend(secret_key="test-key", max_age=3600)
         backend._version_getter = lambda u: 1
@@ -248,7 +248,7 @@ class TestCookieBackendRevokeCap:
         assert len(backend._revoked) == 2
 
     def test_revoke_logs_warning_at_capacity(self, backend):
-        import dagster_authkit.auth.session as sess_mod
+        import dagster_authkit_plus.auth.session as sess_mod
         backend._MAX_REVOKED = 1
         backend.revoke("token-1")
         with patch.object(sess_mod.logger, "warning") as mock_warn:
@@ -287,7 +287,7 @@ class TestRedisBackend:
 
     @pytest.fixture
     def backend(self, mock_redis):
-        from dagster_authkit.auth.session import RedisBackend
+        from dagster_authkit_plus.auth.session import RedisBackend
         return RedisBackend(redis_url="redis://localhost:6379/0", max_age=3600)
 
     @pytest.fixture

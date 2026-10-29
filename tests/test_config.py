@@ -11,7 +11,7 @@ Covers:
 
 import pytest
 
-from dagster_authkit.utils.config import AuthConfig, config
+from dagster_authkit_plus.utils.config import AuthConfig, config
 
 
 class TestAuthConfigDefaults:

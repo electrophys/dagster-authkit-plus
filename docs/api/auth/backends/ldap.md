@@ -1,3 +1,3 @@
 # LDAP Backend
 
-::: dagster_authkit.auth.backends.ldap
+::: dagster_authkit_plus.auth.backends.ldap

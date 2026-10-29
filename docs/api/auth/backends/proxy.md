@@ -1,3 +1,3 @@
 # Proxy Backend
 
-::: dagster_authkit.auth.backends.proxy
+::: dagster_authkit_plus.auth.backends.proxy

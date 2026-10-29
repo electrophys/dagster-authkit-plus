@@ -9,7 +9,7 @@ Covers:
 """
 
 
-from dagster_authkit.core.graphql_analyzer import GraphQLMutationAnalyzer
+from dagster_authkit_plus.core.graphql_analyzer import GraphQLMutationAnalyzer
 
 
 class TestExtractMutationNames:

@@ -1,7 +1,7 @@
 """
-Unit tests for dagster_authkit/core/patch.py
+Unit tests for dagster_authkit_plus/core/patch.py
 
-Covers the three UI injection bugs introduced in dagster-authkit 0.4.0/0.4.1
+Covers the three UI injection bugs introduced in dagster-authkit-plus 0.4.0/0.4.1
 that affect Dagster 1.13.8 + Starlette 1.3.1:
 
   Bug 1 - Async wrapper: sync original + async _inject_resilient_ui returned an
@@ -22,7 +22,7 @@ from starlette.datastructures import State
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
-from dagster_authkit.auth.backends.base import AuthUser, Role
+from dagster_authkit_plus.auth.backends.base import AuthUser, Role
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -92,7 +92,7 @@ class TestBug1AsyncWrapper:
 
         import dagster_webserver.webserver as webserver_module
 
-        from dagster_authkit.core.patch import apply_patches
+        from dagster_authkit_plus.core.patch import apply_patches
 
         # Reset the sentinel so apply_patches() will run
         webserver_module.DagsterWebserver._authkit_patched = False
@@ -107,7 +107,7 @@ class TestBug1AsyncWrapper:
 
         try:
             with (
-                patch("dagster_authkit.core.patch.apply_patches.__wrapped__", create=True),
+                patch("dagster_authkit_plus.core.patch.apply_patches.__wrapped__", create=True),
                 patch.object(
                     webserver_module.DagsterWebserver,
                     "build_middleware",
@@ -136,7 +136,7 @@ class TestBug1AsyncWrapper:
     @pytest.mark.asyncio
     async def test_inject_called_with_awaited_response(self):
         """_inject_resilient_ui must await the original even when it is sync."""
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         user = _make_user()
         request = _make_request()
@@ -172,7 +172,7 @@ class TestBug2UserRetrieval:
     @pytest.mark.asyncio
     async def test_user_retrieved_from_state_object(self):
         """Injection runs when user is stored on a Starlette State object."""
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         user = _make_user()
         scope = _make_scope()
@@ -199,7 +199,7 @@ class TestBug2UserRetrieval:
         Injection must NOT silently skip when scope['state'] is a plain dict
         (the old middleware stored user as scope['state']['user']).
         """
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         user = _make_user()
         scope = _make_scope()
@@ -222,7 +222,7 @@ class TestBug2UserRetrieval:
     @pytest.mark.asyncio
     async def test_no_user_returns_vanilla_response(self):
         """When no user is present, the original response is returned unchanged."""
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         scope = _make_scope()
         request = Request(scope)
@@ -240,7 +240,7 @@ class TestBug2UserRetrieval:
     @pytest.mark.asyncio
     async def test_wrong_type_in_state_returns_vanilla_response(self):
         """A non-AuthUser value in state must not crash; vanilla HTML is returned."""
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         scope = _make_scope()
         state = State()
@@ -272,7 +272,7 @@ class TestBug3CspNonce:
     @pytest.mark.asyncio
     async def test_nonce_is_copied_to_injected_script(self):
         """The injected <script> tag must carry the nonce found in the page."""
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         user = _make_user()
         scope = _make_scope()
@@ -298,7 +298,7 @@ class TestBug3CspNonce:
     @pytest.mark.asyncio
     async def test_no_nonce_in_page_leaves_script_unchanged(self):
         """When the page has no nonce, the injected <script> is emitted without one."""
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         user = _make_user()
         scope = _make_scope()
@@ -324,7 +324,7 @@ class TestBug3CspNonce:
         Only the first <script> injected by authkit should get the nonce —
         prevent double-replacement if the template emits multiple <script> tags.
         """
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         user = _make_user()
         scope = _make_scope()
@@ -368,8 +368,8 @@ class TestMiddlewareStateAlignment:
         """
         from starlette.datastructures import State
 
-        from dagster_authkit.auth.backends.base import Role
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.backends.base import Role
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         captured_scope: dict = {}
 
@@ -400,7 +400,7 @@ class TestMiddlewareStateAlignment:
             pass
 
         with (
-            patch("dagster_authkit.core.middleware.config") as mock_cfg,
+            patch("dagster_authkit_plus.core.middleware.config") as mock_cfg,
         ):
             mock_cfg.AUTH_BACKEND = "proxy"
             mock_cfg.DAGSTER_AUTH_PROXY_TRUST_ALL = True
@@ -442,8 +442,8 @@ class TestGraphQLBatchFailClosed:
 
     @pytest.mark.asyncio
     async def test_non_dict_item_in_batch_returns_400(self):
-        from dagster_authkit.auth.backends.base import AuthUser, Role
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.backends.base import AuthUser, Role
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages: list = []
         mock_app_called = False
@@ -486,7 +486,7 @@ class TestGraphQLBatchFailClosed:
             "client": ("127.0.0.1", 12345),
         }
 
-        with patch("dagster_authkit.core.middleware.config") as mock_cfg:
+        with patch("dagster_authkit_plus.core.middleware.config") as mock_cfg:
             mock_cfg.AUTH_BACKEND = "proxy"
             mock_cfg.DAGSTER_AUTH_PROXY_TRUST_ALL = True
             mock_cfg.DAGSTER_AUTH_PROXY_TRUSTED_IPS = None
@@ -531,8 +531,8 @@ class TestGraphQLBatchFailClosed:
     @pytest.mark.asyncio
     async def test_empty_batch_still_passthrough(self):
         """Empty array [] should still passthrough (regression guard)."""
-        from dagster_authkit.auth.backends.base import AuthUser, Role
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.auth.backends.base import AuthUser, Role
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         mock_app_called = False
 
@@ -571,7 +571,7 @@ class TestGraphQLBatchFailClosed:
             "client": ("127.0.0.1", 12345),
         }
 
-        with patch("dagster_authkit.core.middleware.config") as mock_cfg:
+        with patch("dagster_authkit_plus.core.middleware.config") as mock_cfg:
             mock_cfg.AUTH_BACKEND = "proxy"
             mock_cfg.DAGSTER_AUTH_PROXY_TRUST_ALL = True
             mock_cfg.DAGSTER_AUTH_PROXY_TRUSTED_IPS = None
@@ -614,7 +614,7 @@ class TestSecurityHeaders:
     @pytest.mark.asyncio
     async def test_options_response_has_security_headers(self):
         """OPTIONS requests must receive security headers."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         sent_messages = []
 
@@ -645,7 +645,7 @@ class TestSecurityHeaders:
         async def receive():
             return {"type": "http.request", "body": b"", "more_body": False}
 
-        with patch("dagster_authkit.core.middleware.config") as mock_cfg:
+        with patch("dagster_authkit_plus.core.middleware.config") as mock_cfg:
             mock_cfg.AUTH_BACKEND = "dummy"
             mock_cfg.SESSION_COOKIE_NAME = "test_session"
             mock_cfg.DAGSTER_AUTH_UNKNOWN_MUTATION_ROLE = "EDITOR"
@@ -665,7 +665,7 @@ class TestSecurityHeaders:
     @pytest.mark.asyncio
     async def test_inject_headers_send_wrapper(self):
         """_inject_headers_send must add security headers to any response."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware
 
         captured = []
 
@@ -695,7 +695,7 @@ class TestUserDataXssEscape:
     @pytest.mark.asyncio
     async def test_html_special_chars_in_full_name_are_escaped(self):
         """full_name with HTML special chars must be escaped in injected JSON."""
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         user = AuthUser(
             username="testuser",
@@ -725,7 +725,7 @@ class TestUserDataXssEscape:
     @pytest.mark.asyncio
     async def test_xss_in_username_and_email_escaped(self):
         """username and email with HTML special chars must be escaped."""
-        from dagster_authkit.core import patch as patch_module
+        from dagster_authkit_plus.core import patch as patch_module
 
         user = AuthUser(
             username='"><script>bad</script>',
@@ -761,7 +761,7 @@ class TestClientIpLogSanitization:
 
     def test_crlf_in_client_ip_is_sanitized_in_log(self, caplog):
         """CRLF chars in client_ip must be replaced before logging."""
-        from dagster_authkit.core.middleware import DagsterAuthMiddleware, config
+        from dagster_authkit_plus.core.middleware import DagsterAuthMiddleware, config
 
         with caplog.at_level("WARNING"):
             middleware = DagsterAuthMiddleware(lambda s, r, snd: None)
@@ -788,7 +788,7 @@ class TestVerifyPatches:
 
     def test_verify_patches_returns_false_when_no_sentinel(self):
         """Without _authkit_patched sentinel, verify_patches must return False."""
-        from dagster_authkit.core.patch import verify_patches
+        from dagster_authkit_plus.core.patch import verify_patches
 
         assert verify_patches() is False
 
@@ -809,7 +809,7 @@ class TestVerifyPatches:
 
     def test_verify_patches_returns_false_wrong_function_name(self):
         """If the endpoint name is not patched_index_html, must return False."""
-        from dagster_authkit.core.patch import verify_patches
+        from dagster_authkit_plus.core.patch import verify_patches
 
         parent_mod, child_mod = self._make_fake_webserver("original_index_html")
         with patch.dict(sys.modules, {"dagster_webserver": parent_mod, "dagster_webserver.webserver": child_mod}):
@@ -817,7 +817,7 @@ class TestVerifyPatches:
 
     def test_verify_patches_returns_true_with_correct_name(self):
         """If both sentinel and function name match, must return True."""
-        from dagster_authkit.core.patch import verify_patches
+        from dagster_authkit_plus.core.patch import verify_patches
 
         parent_mod, child_mod = self._make_fake_webserver("patched_index_html")
         with patch.dict(sys.modules, {"dagster_webserver": parent_mod, "dagster_webserver.webserver": child_mod}):
